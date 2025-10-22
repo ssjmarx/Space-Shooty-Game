@@ -1,0 +1,274 @@
+extends Node2D
+
+# Master script - Central game controller
+# Manages loading/unloading of nodes and handles player input
+
+# Component references
+var signal_manager: Node
+var input_handler: Node
+var physics_manager: Node
+var sound_manager: Node
+var current_board: Node
+var player_entity: Node
+
+# Game state
+var game_running: bool = false
+var components_loaded: Dictionary = {}
+
+# Signals
+signal game_started
+signal game_paused
+signal game_stopped
+signal component_loaded(component_name)
+signal component_unloaded(component_name)
+
+func _ready():
+	"""Initialize game systems"""
+	print("Master script initializing...")
+	
+	# Load core components in order
+	load_component("signal_manager")
+	load_component("input_handler")
+	
+	# Connect to signals
+	if signal_manager:
+		_connect_signals()
+	
+	print("Master script ready!")
+
+func _process(delta):
+	"""Main game loop"""
+	if not game_running:
+		return
+	
+	# Handle input
+	handle_input()
+	
+	# Process game logic
+	process_game_logic(delta)
+
+func load_component(component_name: String) -> Node:
+	"""Load a game component dynamically"""
+	
+	# Check if already loaded
+	if components_loaded.has(component_name):
+		print("Component ", component_name, " already loaded")
+		return components_loaded[component_name]
+	
+	# Determine component path and script
+	var component_path = ""
+	var component_script = ""
+	
+	match component_name:
+		"signal_manager":
+			component_path = "res://scripts/signal_manager.gd"
+			component_script = "res://scripts/signal_manager.gd"
+		"input_handler":
+			component_path = "res://scripts/input_handler.gd"
+			component_script = "res://scripts/input_handler.gd"
+		"physics_manager":
+			component_path = "res://scripts/physics_manager.gd"
+			component_script = "res://scripts/physics_manager.gd"
+		"sound_manager":
+			component_path = "res://scripts/sound_manager.gd"
+			component_script = "res://scripts/sound_manager.gd"
+		_:
+			print("Unknown component: ", component_name)
+			return null
+	
+	# Create component node
+	var component_node = Node.new()
+	component_node.name = component_name
+	component_node.set_script(load(component_script))
+	
+	# Add to scene tree
+	add_child(component_node)
+	components_loaded[component_name] = component_node
+	
+	# Store reference
+	match component_name:
+		"signal_manager":
+			signal_manager = component_node
+		"input_handler":
+			input_handler = component_node
+		"physics_manager":
+			physics_manager = component_node
+		"sound_manager":
+			sound_manager = component_node
+	
+	print("Loaded component: ", component_name)
+	emit_signal("component_loaded", component_name)
+	return component_node
+
+func unload_component(component_name: String):
+	"""Unload a game component"""
+	
+	if not components_loaded.has(component_name):
+		print("Component ", component_name, " not loaded")
+		return
+	
+	var component_node = components_loaded[component_name]
+	
+	# Remove from scene tree
+	if is_instance_valid(component_node):
+		component_node.queue_free()
+	
+	# Remove from loaded components
+	components_loaded.erase(component_name)
+	
+	# Clear reference
+	match component_name:
+		"signal_manager":
+			signal_manager = null
+		"input_handler":
+			input_handler = null
+		"physics_manager":
+			physics_manager = null
+		"sound_manager":
+			sound_manager = null
+	
+	print("Unloaded component: ", component_name)
+	emit_signal("component_unloaded", component_name)
+
+func handle_input():
+	"""Process player input"""
+	if not input_handler:
+		return
+	
+	# Get input from handler
+	var movement_input = input_handler.get_movement_input()
+	var shooting_input = input_handler.get_shooting_input()
+	var ui_input = input_handler.get_ui_input()
+	
+	# Process input based on game state
+	if player_entity and game_running:
+		# Send movement input to player
+		if movement_input != Vector2.ZERO:
+			player_entity.move(movement_input)
+		
+		# Send shooting input to player
+		if shooting_input != Vector2.ZERO:
+			player_entity.shoot(shooting_input)
+	
+	# Handle UI input
+	if ui_input:
+		_process_ui_input(ui_input)
+
+func spawn_entity(entity_type: String, position: Vector2) -> Node:
+	"""Spawn a game entity at specified position"""
+	
+	print("Spawning entity: ", entity_type, " at ", position)
+	
+	# Determine entity scene and script
+	var entity_scene_path = ""
+	var entity_script_path = ""
+	
+	match entity_type:
+		"player":
+			entity_scene_path = "res://scenes/player.tscn"
+		"asteroid":
+			entity_scene_path = "res://scenes/asteroid.tscn"
+		"hunter":
+			entity_scene_path = "res://scenes/hunter.tscn"
+		"player_bullet":
+			entity_scene_path = "res://scenes/player_bullet.tscn"
+		"hunter_bullet":
+			entity_scene_path = "res://scenes/hunter_bullet.tscn"
+		_:
+			print("Unknown entity type: ", entity_type)
+			return null
+	
+	# Load and instantiate entity
+	var entity_scene = load(entity_scene_path)
+	if not entity_scene:
+		print("Failed to load entity scene: ", entity_scene_path)
+		return null
+	
+	var entity_instance = entity_scene.instantiate()
+	entity_instance.global_position = position
+	
+	# Add to current board or directly to scene tree
+	if current_board:
+		current_board.add_child(entity_instance)
+	else:
+		add_child(entity_instance)
+	
+	# Store reference if it's the player
+	if entity_type == "player":
+		player_entity = entity_instance
+	
+	# Emit spawn signal
+	if signal_manager:
+		signal_manager.emit_signal("entity_spawned_signal", entity_type, position)
+	
+	return entity_instance
+
+func despawn_entity(entity_id: int):
+	"""Remove an entity from the game"""
+	
+	# Find entity by ID (implementation depends on entity ID system)
+	print("Despawning entity ID: ", entity_id)
+	
+	# This would need to be implemented based on how we track entities
+	# For now, this is a placeholder
+
+func start_game():
+	"""Start the game"""
+	print("Starting game...")
+	game_running = true
+	emit_signal("game_started")
+
+func pause_game():
+	"""Pause the game"""
+	print("Pausing game...")
+	game_running = false
+	emit_signal("game_paused")
+
+func stop_game():
+	"""Stop the game"""
+	print("Stopping game...")
+	game_running = false
+	emit_signal("game_stopped")
+
+func process_game_logic(delta: float):
+	"""Process main game logic"""
+	
+	# Update board
+	if current_board and current_board.has_method("_process"):
+		current_board._process(delta)
+	
+	# Update physics
+	if physics_manager and physics_manager.has_method("_process"):
+		physics_manager._process(delta)
+
+func _connect_signals():
+	"""Connect to signal manager signals"""
+	
+	if not signal_manager:
+		return
+	
+	# Connect universal signals
+	if signal_manager.has_signal("collision_signal"):
+		signal_manager.connect("collision_signal", _on_collision_signal)
+	
+	if signal_manager.has_signal("entity_destroyed_signal"):
+		signal_manager.connect("entity_destroyed_signal", _on_entity_destroyed_signal)
+
+func _on_collision_signal(entity_a: Node, entity_b: Node, damage_vector: Vector2):
+	"""Handle universal collision signal"""
+	
+	print("Collision detected between ", entity_a.name, " and ", entity_b.name)
+	
+	# Apply collision physics
+	if physics_manager:
+		physics_manager.apply_collision_force(entity_a, -damage_vector, damage_vector.length())
+		physics_manager.apply_collision_force(entity_b, damage_vector, damage_vector.length())
+
+func _on_entity_destroyed_signal(entity: Node, explosion_radius: float):
+	"""Handle entity destruction"""
+	
+	print("Entity destroyed: ", entity.name, " with explosion radius: ", explosion_radius)
+	
+	# Apply explosion damage
+	if physics_manager and explosion_radius > 0:
+		physics_manager.apply_explosion_damage(entity.global_position, explosion_radius, 100)

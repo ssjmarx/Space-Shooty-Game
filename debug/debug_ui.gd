@@ -9,6 +9,7 @@ extends Control
 @onready var status_label: Label
 
 # Debug state
+var current_movement_input: Vector2 = Vector2.ZERO
 var current_keys: Array = []
 var collision_count: int = 0
 var last_collision_time: float = 0.0
@@ -47,19 +48,29 @@ func create_label(text: String, position: Vector2) -> Label:
 	add_child(label)
 	return label
 
+func on_movement_input_changed(direction: Vector2):
+	"""Handle movement input signal from master"""
+	
+	current_movement_input = direction
+	update_movement_display()
+
+func update_movement_display():
+	"""Update the movement input display"""
+	
+	var movement_text = "Movement: "
+	if current_movement_input != Vector2.ZERO:
+		movement_text += "(" + str(current_movement_input.x) + ", " + str(current_movement_input.y) + ")"
+	else:
+		movement_text += "None"
+	
+	if keys_label:
+		keys_label.text = movement_text
+
 func update_keys_display():
 	"""Update the keys pressed display"""
 	
-	# Get keys from input handler if available
-	var input_handler = get_node_or_null("/root/Main/InputHandler")
-	if input_handler:
-		var pressed_keys = input_handler.get_pressed_keys()
-		if pressed_keys.size() > 0:
-			keys_label.text = "Keys Pressed: " + ", ".join(pressed_keys)
-		else:
-			keys_label.text = "Keys Pressed: None"
-	else:
-		keys_label.text = "Keys Pressed: [Input Handler Not Found]"
+	# This is now handled by movement signals
+	pass
 
 func update_signals_display():
 	"""Update the signals display"""

@@ -10,6 +10,15 @@ var ui_input: String = ""
 var mouse_position: Vector2 = Vector2.ZERO
 var mouse_world_position: Vector2 = Vector2.ZERO
 
+# Input signals
+signal movement_input_changed(direction)
+signal shooting_input_changed(direction)
+signal key_pressed(key_name)
+signal key_released(key_name)
+signal mouse_moved(position)
+signal mouse_clicked(position)
+signal ui_action(action)
+
 # Input settings
 var movement_keys = {
 	"up": "ui_up",
@@ -75,20 +84,25 @@ func _handle_keyboard_input(event: InputEventKey):
 	var key_scancode = event.get_keycode_with_modifiers()
 	var key_name = OS.get_keycode_string(key_scancode).to_lower()
 	
-	# Track key state
+	# Track key state and emit signals
 	if event.pressed:
 		key_states[key_name] = true
+		emit_signal("key_pressed", key_name)
 	else:
 		key_states[key_name] = false
+		emit_signal("key_released", key_name)
 	
 	# Handle UI actions
 	if event.pressed:
 		if key_name == "escape":
 			ui_input = "pause"
+			emit_signal("ui_action", "pause")
 		elif key_name == "space":
 			ui_input = "look_ahead"
+			emit_signal("ui_action", "look_ahead")
 		elif key_name == "tab":
 			ui_input = "debug_test"
+			emit_signal("ui_action", "debug_test")
 
 func _handle_mouse_button_input(event: InputEventMouseButton):
 	"""Handle mouse button input events"""
@@ -113,6 +127,7 @@ func _handle_mouse_motion(event: InputEventMouseMotion):
 func _update_movement_input():
 	"""Update movement input vector"""
 	
+	var old_movement_input = movement_input
 	movement_input = Vector2.ZERO
 	
 	# Check movement keys
@@ -128,6 +143,10 @@ func _update_movement_input():
 	# Normalize diagonal movement
 	if movement_input.length() > 0:
 		movement_input = movement_input.normalized()
+	
+	# Emit signal if movement changed
+	if old_movement_input != movement_input:
+		emit_signal("movement_input_changed", movement_input)
 
 func _update_shooting_input():
 	"""Update shooting input vector"""

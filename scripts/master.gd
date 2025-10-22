@@ -37,6 +37,10 @@ func _ready():
 	if signal_manager:
 		_connect_signals()
 	
+	# Connect to input handler signals
+	if input_handler:
+		_connect_input_signals()
+	
 	print("Master script ready!")
 
 func _process(delta):
@@ -256,6 +260,58 @@ func _connect_signals():
 	
 	if signal_manager.has_signal("entity_destroyed_signal"):
 		signal_manager.connect("entity_destroyed_signal", _on_entity_destroyed_signal)
+
+func _connect_input_signals():
+	"""Connect to input handler signals"""
+	
+	if not input_handler:
+		return
+	
+	# Connect input signals
+	if input_handler.has_signal("movement_input_changed"):
+		input_handler.connect("movement_input_changed", _on_movement_input_changed)
+	
+	if input_handler.has_signal("key_pressed"):
+		input_handler.connect("key_pressed", _on_key_pressed)
+	
+	if input_handler.has_signal("key_released"):
+		input_handler.connect("key_released", _on_key_released)
+	
+	if input_handler.has_signal("ui_action"):
+		input_handler.connect("ui_action", _on_ui_action)
+	
+	print("MASTER: Input signals connected!")
+
+func _on_movement_input_changed(direction: Vector2):
+	"""Handle movement input changes"""
+	
+	# Broadcast movement input to interested components
+	var debug_ui = get_node_or_null("UI/DebugUI")
+	if debug_ui and debug_ui.has_method("on_movement_input_changed"):
+		debug_ui.on_movement_input_changed(direction)
+
+func _on_key_pressed(key_name: String):
+	"""Handle key press events"""
+	
+	print("MASTER: Key pressed: ", key_name)
+
+func _on_key_released(key_name: String):
+	"""Handle key release events"""
+	
+	print("MASTER: Key released: ", key_name)
+
+func _on_ui_action(action: String):
+	"""Handle UI action events"""
+	
+	print("MASTER: UI action: ", action)
+	
+	# Handle debug test action
+	if action == "debug_test":
+		var debug_ui = get_node_or_null("UI/DebugUI")
+		if debug_ui and debug_ui.has_method("on_debug_key_pressed"):
+			debug_ui.on_debug_key_pressed()
+	else:
+		_process_ui_input(action)
 
 func _on_collision_signal(entity_a: Node, entity_b: Node, damage_vector: Vector2):
 	"""Handle universal collision signal"""

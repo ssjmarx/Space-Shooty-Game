@@ -156,11 +156,37 @@ func on_debug_key_pressed():
 	
 	# Send collision signal through signal manager
 	var signal_manager = get_node_or_null("../SignalManager")
+	print("DEBUG UI: Looking for SignalManager at '../SignalManager', found: ", signal_manager != null)
+	
 	if signal_manager:
+		print("DEBUG UI: Found SignalManager, emitting collision signal")
 		signal_manager.emit_collision_signal(entity_a, entity_b, Vector2(10, 5))
 		update_status("Debug: Test collision signal sent!")
 	else:
-		update_status("Debug: Signal Manager not found!")
+		# Try alternative paths
+		print("DEBUG UI: Trying alternative paths...")
+		signal_manager = get_node_or_null("../../SignalManager")
+		print("DEBUG UI: Looking for SignalManager at '../../SignalManager', found: ", signal_manager != null)
+		
+		if signal_manager:
+			print("DEBUG UI: Found SignalManager at alternative path, emitting collision signal")
+			signal_manager.emit_collision_signal(entity_a, entity_b, Vector2(10, 5))
+			update_status("Debug: Test collision signal sent!")
+		else:
+			# Try getting it from the main node directly
+			var main_node = get_node_or_null("../..")
+			if main_node and main_node.has_method("get"):
+				signal_manager = main_node.get("signal_manager")
+				print("DEBUG UI: Found SignalManager through main_node.signal_manager: ", signal_manager != null)
+				
+				if signal_manager:
+					print("DEBUG UI: Found SignalManager through main node, emitting collision signal")
+					signal_manager.emit_collision_signal(entity_a, entity_b, Vector2(10, 5))
+					update_status("Debug: Test collision signal sent!")
+				else:
+					update_status("Debug: Signal Manager not found!")
+			else:
+				update_status("Debug: Signal Manager not found!")
 	
 	# Clean up test entities
 	entity_a.queue_free()

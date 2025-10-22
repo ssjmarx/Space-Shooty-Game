@@ -8,12 +8,211 @@ PROJECT RULES:
 3. documentation.txt will track everything currently in the project
 
 GAME ELEMENTS TO PLAN:
-- Player ship mechanics and controls
-- Enemy types and behaviors
-- Projectile systems
-- Power-ups and upgrades
-- Level progression
-- UI elements (HUD, menus, etc.)
-- Sound effects and music
-- Visual effects and animations
-- Game states (menu, playing, paused, game over)
+
+CORE ARCHITECTURE
+
+Component-Based System:
+- Master script manages loading/unloading of nodes
+- Helper scripts controlled by master script
+- Signal-based communication for maximum modularity
+- Dynamic entity spawning and management
+
+MASTER SYSTEM
+
+Master Script (master.gd):
+- Node: Node2D or Control (root node)
+- Functions:
+  - _ready() - Initialize game systems
+  - _process(delta) - Main game loop
+  - load_component(component_name) - Load game components
+  - unload_component(component_name) - Unload components
+  - handle_input() - Process player input
+  - spawn_entity(entity_type, position) - Spawn game entities
+  - despawn_entity(entity_id) - Remove entities
+
+Input Handler Component:
+- Node: Node
+- Functions:
+  - _input(event) - Capture input events
+  - get_movement_input() - Return movement vector
+  - get_shooting_input() - Return shooting direction
+  - get_ui_input() - Handle UI interactions
+
+BOARD SYSTEM
+
+Space Board (space_board.tscn/gd):
+- Node: Node2D
+- Components:
+  - Moving starfield background
+  - Nebula and planet layers (parallax)
+  - Infinite scrolling system
+  - Entity spawn manager
+
+Space Board Functions:
+- _ready() - Initialize board systems
+- _process(delta) - Update board state
+- generate_asteroids() - Spawn asteroids
+- generate_enemies() - Spawn enemy ships
+- update_starfield(delta) - Move background elements
+- get_spawn_position() - Calculate spawn locations
+
+ENTITY SYSTEM
+
+Base Entity (entity.gd):
+- Node: RigidBody2D
+- Properties: health, weight, velocity, visibility_range
+- Functions:
+  - _ready() - Initialize entity
+  - _process(delta) - Update entity
+  - take_damage(amount) - Handle damage
+  - destroy() - Entity destruction
+  - emit_collision_signal(other_entity) - Collision handling
+
+Asteroid Entity (asteroid.tscn/gd):
+- Node: RigidBody2D (extends Base Entity)
+- Properties: size_level, composition
+- Functions:
+  - _ready() - Initialize asteroid
+  - break_apart() - Split into smaller pieces
+  - apply_collision_damage(damage) - Handle collision damage
+
+Hunter Entity (hunter.tscn/gd):
+- Node: RigidBody2D (extends Base Entity)
+- Properties: search_radius, attack_radius, aggression_level
+- Functions:
+  - _ready() - Initialize hunter
+  - _process(delta) - AI behavior
+  - search_for_player() - Search mode behavior
+  - attack_player() - Attack mode behavior
+  - shoot_at_player() - Fire projectiles
+
+Player Entity (player.tscn/gd):
+- Node: RigidBody2D (extends Base Entity)
+- Properties: health, max_speed, acceleration, weapons
+- Functions:
+  - _ready() - Initialize player
+  - _process(delta) - Handle input and physics
+  - move(direction) - Movement with realistic physics
+  - shoot(direction) - Fire projectiles
+  - take_damage(amount) - Handle player damage
+
+PROJECTILE SYSTEM
+
+Base Projectile (projectile.gd):
+- Node: Area2D
+- Properties: damage, speed, owner, lifetime
+- Functions:
+  - _ready() - Initialize projectile
+  - _process(delta) - Move projectile
+  - _on_body_entered(body) - Handle collision
+  - destroy() - Remove projectile
+
+Player Bullet (player_bullet.tscn/gd):
+- Node: Area2D (extends Base Projectile)
+- Properties: damage, penetration
+- Functions:
+  - _ready() - Initialize player bullet
+
+Hunter Bullet (hunter_bullet.tscn/gd):
+- Node: Area2D (extends Base Projectile)
+- Properties: damage, homing_ability
+- Functions:
+  - _ready() - Initialize hunter bullet
+  - _process(delta) - Homing behavior
+
+SIGNAL SYSTEM
+
+Universal Signals:
+- collision_signal(entity_a, entity_b, damage_vector)
+- visibility_signal(entity, viewer, is_visible)
+- entity_spawned_signal(entity_type, position)
+- entity_destroyed_signal(entity, explosion_radius)
+- damage_signal(entity, amount, source)
+- explosion_signal(position, radius, damage)
+
+Signal Manager (signal_manager.gd):
+- Node: Node
+- Functions:
+  - _ready() - Connect all signals
+  - emit_collision_signal(...) - Handle collisions
+  - emit_visibility_signal(...) - Handle visibility
+  - calculate_collision_damage(entity_a, entity_b) - Physics calculations
+  - apply_explosion_damage(position, radius, damage) - Area damage
+
+UI SYSTEM
+
+Game UI (game_ui.tscn/gd):
+- Node: CanvasLayer
+- Components:
+  - Health bar
+  - Hit counter
+  - Playtime display
+  - Enemy direction indicators
+  - Camera controller
+
+UI Functions:
+- _ready() - Initialize UI elements
+- _process(delta) - Update UI state
+- update_health(health, max_health) - Health display
+- update_hits(count) - Hit counter
+- update_playtime(time) - Time display
+- update_enemy_indicators(enemies) - Direction pointers
+- handle_camera_look() - Camera look-ahead system
+
+Camera System:
+- Node: Camera2D
+- Functions:
+- _process(delta) - Follow player
+- look_ahead(direction) - Look in direction
+- get_enemies_off_screen() - Find off-screen enemies
+
+SOUND SYSTEM
+
+Sound Manager (sound_manager.gd):
+- Node: Node
+- Properties: music_intensity, sound_effects
+- Functions:
+- _ready() - Initialize audio
+- _process(delta) - Update music intensity
+- play_shoot_sound() - Shooting audio
+- play_explosion_sound(size) - Explosion audio
+- play_collision_sound(intensity) - Collision audio
+- play_damage_sound() - Player damage audio
+- update_music_intensity(entity_count) - Dynamic music
+
+PHYSICS SYSTEM
+
+Physics Manager (physics_manager.gd):
+- Node: Node
+- Functions:
+- calculate_collision_damage(entity_a, entity_b, velocity_a, velocity_b)
+- apply_collision_force(entity, force_vector, damage_amount)
+- calculate_explosion_damage(distance, radius, max_damage)
+- handle_realistic_physics(entity, input_vector, delta)
+
+IMPLEMENTATION PRIORITY
+
+Phase 1 - Core Systems:
+1. Master script and basic node structure
+2. Signal manager and universal signals
+3. Base entity class
+4. Basic input handling
+
+Phase 2 - Basic Entities:
+1. Player entity with movement
+2. Simple projectile system
+3. Basic collision detection
+4. Space board with starfield
+
+Phase 3 - Game Mechanics:
+1. Asteroid spawning and behavior
+2. Hunter AI (basic)
+3. UI system (health, basic HUD)
+4. Sound system (basic effects)
+
+Phase 4 - Advanced Features:
+1. Advanced AI behaviors
+2. Full UI with enemy indicators
+3. Dynamic music system
+4. Camera look-ahead system
+5. Advanced physics and collision

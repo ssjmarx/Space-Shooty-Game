@@ -1,0 +1,3 @@
+SPACE SHOOTER GAME PLAN
+
+This file will contain the planning elements for our new space shooter game.

@@ -30,6 +30,9 @@ func _ready():
 	load_component("signal_manager")
 	load_component("input_handler")
 	
+	# Load camera component
+	load_camera_component()
+	
 	# Load debug component for testing
 	load_debug_component()
 	
@@ -288,9 +291,11 @@ func _on_movement_input_changed(direction: Vector2):
 	print("MASTER: Movement input changed: ", direction)
 	
 	# Broadcast movement input to interested components
-	var debug_ui = get_node_or_null("UI/DebugUI")
-	if debug_ui and debug_ui.has_method("on_movement_input_changed"):
-		debug_ui.on_movement_input_changed(direction)
+	var ui_node = get_node_or_null("UI")
+	if ui_node:
+		var debug_ui = ui_node.get_node_or_null("DebugUI")
+		if debug_ui and debug_ui.has_method("on_movement_input_changed"):
+			debug_ui.on_movement_input_changed(direction)
 
 func _on_key_pressed(key_name: String):
 	"""Handle key press events"""
@@ -298,9 +303,11 @@ func _on_key_pressed(key_name: String):
 	print("MASTER: Key pressed: ", key_name)
 	
 	# Broadcast key press to interested components
-	var debug_ui = get_node_or_null("UI/DebugUI")
-	if debug_ui and debug_ui.has_method("on_key_pressed"):
-		debug_ui.on_key_pressed(key_name)
+	var ui_node = get_node_or_null("UI")
+	if ui_node:
+		var debug_ui = ui_node.get_node_or_null("DebugUI")
+		if debug_ui and debug_ui.has_method("on_key_pressed"):
+			debug_ui.on_key_pressed(key_name)
 
 func _on_key_released(key_name: String):
 	"""Handle key release events"""
@@ -308,9 +315,11 @@ func _on_key_released(key_name: String):
 	print("MASTER: Key released: ", key_name)
 	
 	# Broadcast key release to interested components
-	var debug_ui = get_node_or_null("UI/DebugUI")
-	if debug_ui and debug_ui.has_method("on_key_released"):
-		debug_ui.on_key_released(key_name)
+	var ui_node = get_node_or_null("UI")
+	if ui_node:
+		var debug_ui = ui_node.get_node_or_null("DebugUI")
+		if debug_ui and debug_ui.has_method("on_key_released"):
+			debug_ui.on_key_released(key_name)
 
 func _on_ui_action(action: String):
 	"""Handle UI action events"""
@@ -319,9 +328,11 @@ func _on_ui_action(action: String):
 	
 	# Handle debug test action
 	if action == "debug_test":
-		var debug_ui = get_node_or_null("UI/DebugUI")
-		if debug_ui and debug_ui.has_method("on_debug_key_pressed"):
-			debug_ui.on_debug_key_pressed()
+		var ui_node = get_node_or_null("UI")
+		if ui_node:
+			var debug_ui = ui_node.get_node_or_null("DebugUI")
+			if debug_ui and debug_ui.has_method("on_debug_key_pressed"):
+				debug_ui.on_debug_key_pressed()
 	else:
 		_process_ui_input(action)
 
@@ -349,46 +360,57 @@ func load_debug_component():
 	
 	print("MASTER: Loading debug component...")
 	
-	# Create debug UI
-	var debug_ui = Control.new()
-	debug_ui.name = "DebugUI"
-	debug_ui.set_script(load("res://debug/debug_ui.gd"))
-	debug_ui.anchors_preset = Control.PRESET_FULL_RECT
-	
-	# Add to UI layer
-	var ui_layer = get_node_or_null("UI")
-	if ui_layer:
-		ui_layer.add_child(debug_ui)
+	# Load UI component from scene file
+	var ui_scene = load("res://components/ui.tscn")
+	if ui_scene:
+		var ui_instance = ui_scene.instantiate()
+		add_child(ui_instance)
+		print("MASTER: UI component loaded from scene file")
+		
+		# Connect debug UI to collision signals
+		var debug_ui = ui_instance.get_node_or_null("DebugUI")
+		if debug_ui and signal_manager:
+			signal_manager.connect("collision_signal", debug_ui.on_collision_signal_received)
+			print("MASTER: Debug UI signals connected")
 	else:
-		# Create UI layer if it doesn't exist
-		ui_layer = CanvasLayer.new()
-		ui_layer.name = "UI"
-		add_child(ui_layer)
-		ui_layer.add_child(debug_ui)
-	
-	# Connect debug UI to collision signals
-	if signal_manager:
-		signal_manager.connect("collision_signal", debug_ui.on_collision_signal_received)
+		print("MASTER: Failed to load UI scene file")
+		return
 	
 	print("MASTER: Debug component loaded successfully!")
+
+func load_camera_component():
+	"""Load camera component"""
+	
+	print("MASTER: Loading camera component...")
+	
+	# Load camera component from scene file
+	var camera_scene = load("res://components/camera2d.tscn")
+	if camera_scene:
+		var camera_instance = camera_scene.instantiate()
+		add_child(camera_instance)
+		print("MASTER: Camera component loaded from scene file")
+	else:
+		print("MASTER: Failed to load camera scene file")
 
 func unload_debug_component():
 	"""Unload debug UI component before closing"""
 	
 	print("MASTER: Unloading debug component...")
 	
-	var debug_ui = get_node_or_null("UI/DebugUI")
-	if debug_ui:
-		# Disconnect signals
-		if signal_manager:
-			signal_manager.disconnect("collision_signal", debug_ui.on_collision_signal_received)
+	var ui_node = get_node_or_null("UI")
+	if ui_node:
+		var debug_ui = ui_node.get_node_or_null("DebugUI")
+		if debug_ui:
+			# Disconnect signals
+			if signal_manager:
+				signal_manager.disconnect("collision_signal", debug_ui.on_collision_signal_received)
+			
+			# Call cleanup
+			if debug_ui.has_method("cleanup"):
+				debug_ui.cleanup()
 		
-		# Call cleanup
-		if debug_ui.has_method("cleanup"):
-			debug_ui.cleanup()
-		
-		# Remove from scene tree
-		debug_ui.queue_free()
+		# Remove entire UI node
+		ui_node.queue_free()
 		print("MASTER: Debug component unloaded successfully!")
 	else:
 		print("MASTER: Debug component not found!")
@@ -415,8 +437,10 @@ func _process_ui_input(ui_input_action: String):
 			print("Shoot action - handled in main input processing")
 		"debug_test":
 			# Handle debug test key
-			var debug_ui = get_node_or_null("UI/DebugUI")
-			if debug_ui and debug_ui.has_method("on_debug_key_pressed"):
-				debug_ui.on_debug_key_pressed()
+			var ui_node = get_node_or_null("UI")
+			if ui_node:
+				var debug_ui = ui_node.get_node_or_null("DebugUI")
+				if debug_ui and debug_ui.has_method("on_debug_key_pressed"):
+					debug_ui.on_debug_key_pressed()
 		_:
 			print("Unknown UI input: ", ui_input_action)

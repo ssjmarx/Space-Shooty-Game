@@ -31,10 +31,9 @@ func _ready():
 	print("Signal Manager initialized")
 	
 	# Connect to global collision system if available
-	if has_node("/root/Master"):
-		var master = get_node("/root/Master")
-		if master.has_signal("component_loaded"):
-			master.connect("component_loaded", _on_component_loaded)
+	var master = get_parent().get_node_or_null("Master")
+	if master and master.has_signal("component_loaded"):
+		master.connect("component_loaded", _on_component_loaded)
 
 func emit_collision_signal(entity_a: Node, entity_b: Node):
 	"""Emit universal collision signal between two entities"""
@@ -141,13 +140,42 @@ func calculate_collision_damage_vector(entity_a: Node, entity_b: Node) -> Vector
 	if not entity_a or not entity_b:
 		return Vector2.ZERO
 	
-	# Get positions and velocities
-	var pos_a = entity_a.global_position
-	var pos_b = entity_b.global_position
+	# Debug: Check if entities have required properties
+	var is_debug_entity = false
+	
+	# Get positions with error handling
+	var pos_a = Vector2.ZERO
+	var pos_b = Vector2.ZERO
+	
+	# Try to get position from entity_a
+	if entity_a.has_method("get_global_position"):
+		pos_a = entity_a.get_global_position()
+	elif "global_position" in entity_a:
+		pos_a = entity_a.global_position
+	else:
+		print("DEBUG: Entity_a '", entity_a.name, "' has no global_position, using default")
+		pos_a = Vector2.ZERO
+		is_debug_entity = true
+	
+	# Try to get position from entity_b
+	if entity_b.has_method("get_global_position"):
+		pos_b = entity_b.get_global_position()
+	elif "global_position" in entity_b:
+		pos_b = entity_b.global_position
+	else:
+		print("DEBUG: Entity_b '", entity_b.name, "' has no global_position, using default")
+		pos_b = Vector2(10, 0)  # Offset so we have a direction
+		is_debug_entity = true
+	
+	# If this is a debug collision, return a simple default damage vector
+	if is_debug_entity:
+		print("DEBUG: Using simple collision for debug entities")
+		return Vector2(5, 0)  # Simple rightward force
+	
+	# Get velocities with error handling
 	var vel_a = Vector2.ZERO
 	var vel_b = Vector2.ZERO
 	
-	# Try to get velocities (assuming RigidBody2D or similar)
 	if entity_a.has_method("get_linear_velocity"):
 		vel_a = entity_a.get_linear_velocity()
 	elif "velocity" in entity_a:

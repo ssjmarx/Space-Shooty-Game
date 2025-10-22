@@ -1,3 +1,19 @@
 SPACE SHOOTY GAME PLAN
 
 This file will contain the planning elements for our new space shooter game.
+
+PROJECT RULES:
+1. NOTHING goes into the Godot project without being described in the gameplan first
+2. All project elements must be planned here before implementation
+3. documentation.txt will track everything currently in the project
+
+GAME ELEMENTS TO PLAN:
+- Player ship mechanics and controls
+- Enemy types and behaviors
+- Projectile systems
+- Power-ups and upgrades
+- Level progression
+- UI elements (HUD, menus, etc.)
+- Sound effects and music
+- Visual effects and animations
+- Game states (menu, playing, paused, game over)

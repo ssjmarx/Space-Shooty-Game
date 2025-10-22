@@ -43,6 +43,12 @@ var action_keys = {
 var key_states: Dictionary = {}
 var mouse_button_states: Dictionary = {}
 
+# Escape key tracking for double-press exit
+var escape_press_count: int = 0
+var last_key_pressed: String = ""
+var escape_double_press_threshold: float = 1.0  # 1 second window for double press
+var last_escape_time: float = 0.0
+
 func _ready():
 	"""Initialize input handler"""
 	print("Input Handler initialized")
@@ -88,6 +94,11 @@ func _handle_keyboard_input(event: InputEventKey):
 	if event.pressed:
 		key_states[key_name] = true
 		emit_signal("key_pressed", key_name)
+		
+		# Reset escape count if any other key is pressed
+		if key_name != "escape":
+			escape_press_count = 0
+			last_key_pressed = key_name
 	else:
 		key_states[key_name] = false
 		emit_signal("key_released", key_name)
@@ -95,8 +106,7 @@ func _handle_keyboard_input(event: InputEventKey):
 	# Handle UI actions
 	if event.pressed:
 		if key_name == "escape":
-			ui_input = "pause"
-			emit_signal("ui_action", "pause")
+			_handle_escape_key()
 		elif key_name == "space":
 			ui_input = "look_ahead"
 			emit_signal("ui_action", "look_ahead")
@@ -130,14 +140,14 @@ func _update_movement_input():
 	var old_movement_input = movement_input
 	movement_input = Vector2.ZERO
 	
-	# Check movement keys
-	if is_key_pressed(movement_keys.up) or is_key_pressed(movement_keys.alt_up):
+	# Check movement keys using proper input checking
+	if Input.is_action_pressed(movement_keys.up) or Input.is_key_pressed(KEY_W):
 		movement_input.y -= 1
-	if is_key_pressed(movement_keys.down) or is_key_pressed(movement_keys.alt_down):
+	if Input.is_action_pressed(movement_keys.down) or Input.is_key_pressed(KEY_S):
 		movement_input.y += 1
-	if is_key_pressed(movement_keys.left) or is_key_pressed(movement_keys.alt_left):
+	if Input.is_action_pressed(movement_keys.left) or Input.is_key_pressed(KEY_A):
 		movement_input.x -= 1
-	if is_key_pressed(movement_keys.right) or is_key_pressed(movement_keys.alt_right):
+	if Input.is_action_pressed(movement_keys.right) or Input.is_key_pressed(KEY_D):
 		movement_input.x += 1
 	
 	# Normalize diagonal movement
@@ -231,12 +241,12 @@ func is_shooting() -> bool:
 func is_boosting() -> bool:
 	"""Check if player is boosting"""
 	
-	return is_key_pressed(action_keys.boost)
+	return Input.is_key_pressed(KEY_SHIFT)
 
 func is_looking_ahead() -> bool:
 	"""Check if player is looking ahead"""
 	
-	return is_key_pressed(action_keys.look_ahead)
+	return Input.is_key_pressed(KEY_SPACE)
 
 func get_input_strength() -> float:
 	"""Get overall input strength (for effects, etc.)"""
@@ -298,3 +308,32 @@ func get_pressed_keys() -> Array:
 		if key_states[key]:
 			pressed_keys.append(key)
 	return pressed_keys
+
+func _handle_escape_key():
+	"""Handle escape key with double-press functionality"""
+	
+	var current_time = Time.get_ticks_msec() / 1000.0  # Convert to seconds
+	
+	# Check if the last key pressed was escape and within time window
+	if last_key_pressed == "escape" and (current_time - last_escape_time) <= escape_double_press_threshold:
+		# This is the second consecutive escape press
+		escape_press_count += 1
+		print("INPUT: Escape press #", escape_press_count)
+		
+		if escape_press_count >= 2:
+			# Two consecutive escapes - quit game
+			print("INPUT: Double escape pressed - quitting game")
+			get_tree().quit()
+			return
+	else:
+		# Reset count if this is the first escape or too much time passed
+		escape_press_count = 1
+		print("INPUT: First escape press - press escape again to quit")
+	
+	# Update tracking variables
+	last_key_pressed = "escape"
+	last_escape_time = current_time
+	
+	# Emit pause signal for first escape
+	ui_input = "pause"
+	emit_signal("ui_action", "pause")

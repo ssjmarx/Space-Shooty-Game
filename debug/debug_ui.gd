@@ -13,6 +13,8 @@ var current_movement_input: Vector2 = Vector2.ZERO
 var current_keys: Array = []
 var collision_count: int = 0
 var last_collision_time: float = 0.0
+var spawned_entities: Array = []
+var entity_spawn_count: int = 0
 
 func _ready():
 	"""Initialize debug UI"""
@@ -38,11 +40,11 @@ func _process(delta):
 	# Update signals display
 	update_signals_display()
 
-func create_label(text: String, position: Vector2) -> Label:
+func create_label(text: String, label_position: Vector2) -> Label:
 	"""Create a debug label"""
 	var label = Label.new()
 	label.text = text
-	label.position = position
+	label.position = label_position
 	label.add_theme_font_size_override("font_size", 12)
 	label.add_theme_color_override("font_color", Color.WHITE)
 	add_child(label)
@@ -105,6 +107,8 @@ func update_signals_display():
 		var time_since = Time.get_ticks_msec() - last_collision_time
 		signal_text += " (Last: " + str(time_since) + "ms ago)"
 	
+	signal_text += "\nEntities: " + str(spawned_entities.size()) + " loaded"
+	
 	signals_label.text = signal_text
 
 func update_status(message: String):
@@ -141,56 +145,59 @@ func flash_background():
 	add_child(timer)
 	timer.start()
 
-func on_debug_key_pressed():
-	"""Handle debug key press for testing collision signal"""
+func spawn_basic_entity():
+	"""Spawn a basic entity for testing"""
 	
-	print("DEBUG UI: Debug key pressed - sending test collision signal")
-	update_status("Debug: Sending test collision signal")
+	entity_spawn_count += 1
+	var entity_name = "BasicEntity_" + str(entity_spawn_count)
 	
-	# Create test entities
-	var entity_a = Node.new()
-	entity_a.name = "TestEntity_A"
+	print("DEBUG UI: Spawning basic entity: ", entity_name)
 	
-	var entity_b = Node.new()
-	entity_b.name = "TestEntity_B"
+	# Create basic entity
+	var entity = Node2D.new()
+	entity.name = entity_name
+	entity.set_script(load("res://scripts/entity.gd"))
+	entity.position = Vector2(randi() % 600 + 100, randi() % 400 + 100)  # Random position
 	
-	# Send collision signal through signal manager
-	var signal_manager = get_node_or_null("../SignalManager")
-	print("DEBUG UI: Looking for SignalManager at '../SignalManager', found: ", signal_manager != null)
-	
-	if signal_manager:
-		print("DEBUG UI: Found SignalManager, emitting collision signal")
-		signal_manager.emit_collision_signal(entity_a, entity_b)
-		update_status("Debug: Test collision signal sent!")
+	# Add to scene tree
+	var main_node = get_node_or_null("../..")
+	if main_node:
+		main_node.add_child(entity)
+		spawned_entities.append(entity)
 	else:
-		# Try alternative paths
-		print("DEBUG UI: Trying alternative paths...")
-		signal_manager = get_node_or_null("../../SignalManager")
-		print("DEBUG UI: Looking for SignalManager at '../../SignalManager', found: ", signal_manager != null)
-		
-		if signal_manager:
-			print("DEBUG UI: Found SignalManager at alternative path, emitting collision signal")
-			signal_manager.emit_collision_signal(entity_a, entity_b)
-			update_status("Debug: Test collision signal sent!")
-		else:
-			# Try getting it from the main node directly
-			var main_node = get_node_or_null("../..")
-			if main_node and main_node.has_method("get"):
-				signal_manager = main_node.get("signal_manager")
-				print("DEBUG UI: Found SignalManager through main_node.signal_manager: ", signal_manager != null)
-				
-				if signal_manager:
-					print("DEBUG UI: Found SignalManager through main node, emitting collision signal")
-					signal_manager.emit_collision_signal(entity_a, entity_b)
-					update_status("Debug: Test collision signal sent!")
-				else:
-					update_status("Debug: Signal Manager not found!")
-			else:
-				update_status("Debug: Signal Manager not found!")
+		print("DEBUG UI: Could not find main node to add entity")
 	
-	# Clean up test entities
-	entity_a.queue_free()
-	entity_b.queue_free()
+	update_status("Spawned " + entity_name + " at " + str(entity.position))
+	print("DEBUG UI: ", entity_name, " spawned. Total entities: ", spawned_entities.size())
+
+func unload_all_entities():
+	"""Unload all spawned entities"""
+	
+	print("DEBUG UI: Unloading all entities (", spawned_entities.size(), " total)")
+	
+	for entity in spawned_entities:
+		if is_instance_valid(entity):
+			print("DEBUG UI: Removing entity: ", entity.name)
+			entity.queue_free()
+	
+	spawned_entities.clear()
+	update_status("All entities unloaded")
+
+func on_debug_key_pressed():
+	"""Handle debug key press for testing"""
+	
+	print("DEBUG UI: Debug key pressed - cycling through debug functions")
+	
+	# Cycle through different debug functions
+	if spawned_entities.size() == 0:
+		# No entities - spawn one
+		spawn_basic_entity()
+	elif spawned_entities.size() < 5:
+		# Less than 5 entities - spawn another
+		spawn_basic_entity()
+	else:
+		# 5 or more entities - unload all
+		unload_all_entities()
 
 func cleanup():
 	"""Clean up debug UI before unloading"""

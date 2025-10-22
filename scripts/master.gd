@@ -30,6 +30,9 @@ func _ready():
 	load_component("signal_manager")
 	load_component("input_handler")
 	
+	# Load debug component for testing
+	load_debug_component()
+	
 	# Connect to signals
 	if signal_manager:
 		_connect_signals()
@@ -273,6 +276,62 @@ func _on_entity_destroyed_signal(entity: Node, explosion_radius: float):
 	if physics_manager and explosion_radius > 0:
 		physics_manager.apply_explosion_damage(entity.global_position, explosion_radius, 100)
 
+func load_debug_component():
+	"""Load debug UI component for testing"""
+	
+	print("MASTER: Loading debug component...")
+	
+	# Create debug UI
+	var debug_ui = Control.new()
+	debug_ui.name = "DebugUI"
+	debug_ui.set_script(load("res://debug/debug_ui.gd"))
+	debug_ui.anchors_preset = Control.PRESET_FULL_RECT
+	
+	# Add to UI layer
+	var ui_layer = get_node_or_null("UI")
+	if ui_layer:
+		ui_layer.add_child(debug_ui)
+	else:
+		# Create UI layer if it doesn't exist
+		ui_layer = CanvasLayer.new()
+		ui_layer.name = "UI"
+		add_child(ui_layer)
+		ui_layer.add_child(debug_ui)
+	
+	# Connect debug UI to collision signals
+	if signal_manager:
+		signal_manager.connect("collision_signal", debug_ui.on_collision_signal_received)
+	
+	print("MASTER: Debug component loaded successfully!")
+
+func unload_debug_component():
+	"""Unload debug UI component before closing"""
+	
+	print("MASTER: Unloading debug component...")
+	
+	var debug_ui = get_node_or_null("UI/DebugUI")
+	if debug_ui:
+		# Disconnect signals
+		if signal_manager:
+			signal_manager.disconnect("collision_signal", debug_ui.on_collision_signal_received)
+		
+		# Call cleanup
+		if debug_ui.has_method("cleanup"):
+			debug_ui.cleanup()
+		
+		# Remove from scene tree
+		debug_ui.queue_free()
+		print("MASTER: Debug component unloaded successfully!")
+	else:
+		print("MASTER: Debug component not found!")
+
+func _exit_tree():
+	"""Called when the main node is about to be removed"""
+	
+	print("MASTER: Shutting down...")
+	unload_debug_component()
+	print("MASTER: Shutdown complete!")
+
 func _process_ui_input(ui_input_action: String):
 	"""Process UI input actions"""
 	
@@ -286,5 +345,10 @@ func _process_ui_input(ui_input_action: String):
 			print("Look ahead functionality - to be implemented")
 		"shoot":
 			print("Shoot action - handled in main input processing")
+		"debug_test":
+			# Handle debug test key
+			var debug_ui = get_node_or_null("UI/DebugUI")
+			if debug_ui and debug_ui.has_method("on_debug_key_pressed"):
+				debug_ui.on_debug_key_pressed()
 		_:
 			print("Unknown UI input: ", ui_input_action)

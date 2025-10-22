@@ -26,7 +26,8 @@ var action_keys = {
 	"shoot": "mouse_left",
 	"pause": "escape",
 	"look_ahead": "space",
-	"boost": "shift"
+	"boost": "shift",
+	"debug_test": "tab"
 }
 
 # Input states tracking
@@ -86,6 +87,8 @@ func _handle_keyboard_input(event: InputEventKey):
 			ui_input = "pause"
 		elif key_name == "space":
 			ui_input = "look_ahead"
+		elif key_name == "tab":
+			ui_input = "debug_test"
 
 func _handle_mouse_button_input(event: InputEventMouseButton):
 	"""Handle mouse button input events"""

@@ -1,0 +1,148 @@
+extends Control
+
+# Debug UI - Testing component for Phase 1 Step 1
+# Shows current input state and receives collision signals for testing
+
+# UI Elements
+@onready var keys_label: Label
+@onready var signals_label: Label
+@onready var status_label: Label
+
+# Debug state
+var current_keys: Array = []
+var collision_count: int = 0
+var last_collision_time: float = 0.0
+
+func _ready():
+	"""Initialize debug UI"""
+	print("DEBUG UI: Initializing...")
+	
+	# Create UI elements if not set
+	if not keys_label:
+		keys_label = create_label("Keys Pressed: None", Vector2(10, 10))
+	if not signals_label:
+		signals_label = create_label("Signals: None", Vector2(10, 50))
+	if not status_label:
+		status_label = create_label("Status: Ready", Vector2(10, 90))
+	
+	print("DEBUG UI: Ready!")
+	update_status("DEBUG UI: Ready and connected")
+
+func _process(delta):
+	"""Update debug display"""
+	
+	# Update keys display
+	update_keys_display()
+	
+	# Update signals display
+	update_signals_display()
+
+func create_label(text: String, position: Vector2) -> Label:
+	"""Create a debug label"""
+	var label = Label.new()
+	label.text = text
+	label.position = position
+	label.add_theme_font_size_override("font_size", 12)
+	label.add_theme_color_override("font_color", Color.WHITE)
+	add_child(label)
+	return label
+
+func update_keys_display():
+	"""Update the keys pressed display"""
+	
+	# Get keys from input handler if available
+	var input_handler = get_node_or_null("/root/Main/InputHandler")
+	if input_handler:
+		var pressed_keys = input_handler.get_pressed_keys()
+		if pressed_keys.size() > 0:
+			keys_label.text = "Keys Pressed: " + ", ".join(pressed_keys)
+		else:
+			keys_label.text = "Keys Pressed: None"
+	else:
+		keys_label.text = "Keys Pressed: [Input Handler Not Found]"
+
+func update_signals_display():
+	"""Update the signals display"""
+	
+	var signal_text = "Collision Signals: " + str(collision_count)
+	if last_collision_time > 0:
+		var time_since = Time.get_ticks_msec() - last_collision_time
+		signal_text += " (Last: " + str(time_since) + "ms ago)"
+	
+	signals_label.text = signal_text
+
+func update_status(message: String):
+	"""Update status message"""
+	
+	status_label.text = "Status: " + message
+	print("DEBUG UI: ", message)
+
+func on_collision_signal_received(entity_a: Node, entity_b: Node, damage_vector: Vector2):
+	"""Handle collision signal from signal manager"""
+	
+	collision_count += 1
+	last_collision_time = Time.get_ticks_msec()
+	
+	var collision_info = "Collision #" + str(collision_count) + ": " + entity_a.name + " <-> " + entity_b.name
+	update_status(collision_info)
+	
+	print("DEBUG UI: Received collision signal - ", collision_info)
+	
+	# Flash effect
+	flash_background()
+
+func flash_background():
+	"""Create a brief flash effect"""
+	
+	var original_color = modulate
+	modulate = Color.YELLOW
+	
+	# Create timer to reset color
+	var timer = Timer.new()
+	timer.wait_time = 0.1
+	timer.one_shot = true
+	timer.timeout.connect(func(): modulate = original_color; timer.queue_free())
+	add_child(timer)
+	timer.start()
+
+func on_debug_key_pressed():
+	"""Handle debug key press for testing collision signal"""
+	
+	print("DEBUG UI: Debug key pressed - sending test collision signal")
+	update_status("Debug: Sending test collision signal")
+	
+	# Create test entities
+	var entity_a = Node.new()
+	entity_a.name = "TestEntity_A"
+	
+	var entity_b = Node.new()
+	entity_b.name = "TestEntity_B"
+	
+	# Send collision signal through signal manager
+	var signal_manager = get_node_or_null("/root/Main/SignalManager")
+	if signal_manager:
+		signal_manager.emit_collision_signal(entity_a, entity_b, Vector2(10, 5))
+		update_status("Debug: Test collision signal sent!")
+	else:
+		update_status("Debug: Signal Manager not found!")
+	
+	# Clean up test entities
+	entity_a.queue_free()
+	entity_b.queue_free()
+
+func cleanup():
+	"""Clean up debug UI before unloading"""
+	
+	print("DEBUG UI: Cleaning up...")
+	update_status("DEBUG UI: Cleaning up...")
+	
+	# Clear all children
+	for child in get_children():
+		child.queue_free()
+	
+	print("DEBUG UI: Cleanup complete!")
+
+func _exit_tree():
+	"""Called when node is about to be removed from scene tree"""
+	
+	cleanup()

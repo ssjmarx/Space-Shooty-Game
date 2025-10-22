@@ -155,7 +155,7 @@ func on_debug_key_pressed():
 	entity_b.name = "TestEntity_B"
 	
 	# Send collision signal through signal manager
-	var signal_manager = get_node_or_null("../../SignalManager")
+	var signal_manager = get_node_or_null("../SignalManager")
 	if signal_manager:
 		signal_manager.emit_collision_signal(entity_a, entity_b, Vector2(10, 5))
 		update_status("Debug: Test collision signal sent!")

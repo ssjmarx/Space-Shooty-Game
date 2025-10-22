@@ -52,19 +52,44 @@ func on_movement_input_changed(direction: Vector2):
 	"""Handle movement input signal from master"""
 	
 	current_movement_input = direction
-	update_movement_display()
+	update_display()
 
-func update_movement_display():
-	"""Update the movement input display"""
+func on_key_pressed(key_name: String):
+	"""Handle key press signal from master"""
 	
-	var movement_text = "Movement: "
-	if current_movement_input != Vector2.ZERO:
-		movement_text += "(" + str(current_movement_input.x) + ", " + str(current_movement_input.y) + ")"
+	if key_name not in current_keys:
+		current_keys.append(key_name)
+	update_display()
+
+func on_key_released(key_name: String):
+	"""Handle key release signal from master"""
+	
+	if key_name in current_keys:
+		current_keys.erase(key_name)
+	update_display()
+
+func update_display():
+	"""Update the debug display"""
+	
+	var display_text = "Keys: "
+	if current_keys.size() > 0:
+		display_text += ", ".join(current_keys)
 	else:
-		movement_text += "None"
+		display_text += "None"
+	
+	display_text += "\nMovement: "
+	if current_movement_input != Vector2.ZERO:
+		display_text += "(" + str(current_movement_input.x) + ", " + str(current_movement_input.y) + ")"
+	else:
+		display_text += "None"
 	
 	if keys_label:
-		keys_label.text = movement_text
+		keys_label.text = display_text
+
+func update_movement_display():
+	"""Update the movement input display (deprecated - use update_display)"""
+	
+	update_display()
 
 func update_keys_display():
 	"""Update the keys pressed display"""
@@ -130,7 +155,7 @@ func on_debug_key_pressed():
 	entity_b.name = "TestEntity_B"
 	
 	# Send collision signal through signal manager
-	var signal_manager = get_node_or_null("../SignalManager")
+	var signal_manager = get_node_or_null("../../SignalManager")
 	if signal_manager:
 		signal_manager.emit_collision_signal(entity_a, entity_b, Vector2(10, 5))
 		update_status("Debug: Test collision signal sent!")

@@ -285,6 +285,8 @@ func _connect_input_signals():
 func _on_movement_input_changed(direction: Vector2):
 	"""Handle movement input changes"""
 	
+	print("MASTER: Movement input changed: ", direction)
+	
 	# Broadcast movement input to interested components
 	var debug_ui = get_node_or_null("UI/DebugUI")
 	if debug_ui and debug_ui.has_method("on_movement_input_changed"):
@@ -294,11 +296,21 @@ func _on_key_pressed(key_name: String):
 	"""Handle key press events"""
 	
 	print("MASTER: Key pressed: ", key_name)
+	
+	# Broadcast key press to interested components
+	var debug_ui = get_node_or_null("UI/DebugUI")
+	if debug_ui and debug_ui.has_method("on_key_pressed"):
+		debug_ui.on_key_pressed(key_name)
 
 func _on_key_released(key_name: String):
 	"""Handle key release events"""
 	
 	print("MASTER: Key released: ", key_name)
+	
+	# Broadcast key release to interested components
+	var debug_ui = get_node_or_null("UI/DebugUI")
+	if debug_ui and debug_ui.has_method("on_key_released"):
+		debug_ui.on_key_released(key_name)
 
 func _on_ui_action(action: String):
 	"""Handle UI action events"""

@@ -160,7 +160,7 @@ func on_debug_key_pressed():
 	
 	if signal_manager:
 		print("DEBUG UI: Found SignalManager, emitting collision signal")
-		signal_manager.emit_collision_signal(entity_a, entity_b, Vector2(10, 5))
+		signal_manager.emit_collision_signal(entity_a, entity_b)
 		update_status("Debug: Test collision signal sent!")
 	else:
 		# Try alternative paths
@@ -170,7 +170,7 @@ func on_debug_key_pressed():
 		
 		if signal_manager:
 			print("DEBUG UI: Found SignalManager at alternative path, emitting collision signal")
-			signal_manager.emit_collision_signal(entity_a, entity_b, Vector2(10, 5))
+			signal_manager.emit_collision_signal(entity_a, entity_b)
 			update_status("Debug: Test collision signal sent!")
 		else:
 			# Try getting it from the main node directly
@@ -181,7 +181,7 @@ func on_debug_key_pressed():
 				
 				if signal_manager:
 					print("DEBUG UI: Found SignalManager through main node, emitting collision signal")
-					signal_manager.emit_collision_signal(entity_a, entity_b, Vector2(10, 5))
+					signal_manager.emit_collision_signal(entity_a, entity_b)
 					update_status("Debug: Test collision signal sent!")
 				else:
 					update_status("Debug: Signal Manager not found!")

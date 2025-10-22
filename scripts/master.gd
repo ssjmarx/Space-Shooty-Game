@@ -272,3 +272,19 @@ func _on_entity_destroyed_signal(entity: Node, explosion_radius: float):
 	# Apply explosion damage
 	if physics_manager and explosion_radius > 0:
 		physics_manager.apply_explosion_damage(entity.global_position, explosion_radius, 100)
+
+func _process_ui_input(ui_input_action: String):
+	"""Process UI input actions"""
+	
+	match ui_input_action:
+		"pause":
+			if game_running:
+				pause_game()
+			else:
+				start_game()
+		"look_ahead":
+			print("Look ahead functionality - to be implemented")
+		"shoot":
+			print("Shoot action - handled in main input processing")
+		_:
+			print("Unknown UI input: ", ui_input_action)

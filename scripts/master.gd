@@ -36,6 +36,9 @@ func _ready():
 	# Load debug component for testing
 	load_debug_component()
 	
+	# Spawn player immediately
+	spawn_player()
+	
 	# Connect to signals
 	if signal_manager:
 		_connect_signals()
@@ -147,7 +150,6 @@ func handle_input():
 	
 	# Get input from handler
 	var movement_input = input_handler.get_movement_input()
-	var shooting_input = input_handler.get_shooting_input()
 	var ui_input = input_handler.get_ui_input()
 	
 	# Process input based on game state
@@ -156,9 +158,11 @@ func handle_input():
 		if movement_input != Vector2.ZERO:
 			player_entity.move(movement_input)
 		
-		# Send shooting input to player
-		if shooting_input != Vector2.ZERO:
-			player_entity.shoot(shooting_input)
+		# Handle shooting input separately
+		if input_handler.is_shooting():
+			var shooting_direction = input_handler.get_shooting_input_from_position(player_entity.global_position)
+			if shooting_direction != Vector2.ZERO:
+				player_entity.shoot(shooting_direction)
 	
 	# Handle UI input
 	if ui_input:
@@ -222,10 +226,38 @@ func despawn_entity(entity_id: int):
 	# This would need to be implemented based on how we track entities
 	# For now, this is a placeholder
 
+func spawn_player():
+	"""Spawn the player entity"""
+	
+	print("MASTER: Spawning player...")
+	
+	# Create player entity directly (no scene file needed yet)
+	var player = Node2D.new()
+	player.name = "Player"
+	player.set_script(load("res://scripts/player.gd"))
+	player.position = Vector2(512, 384)  # Center of 1024x768 screen
+	
+	# Add to scene tree
+	add_child(player)
+	player_entity = player
+	
+	# Set camera to follow player
+	var camera = get_node_or_null("Camera2D")
+	if camera and camera.has_method("set_player_target"):
+		camera.set_player_target(player)
+		print("MASTER: Camera set to follow player")
+	
+	# Emit spawn signal
+	if signal_manager:
+		signal_manager.emit_entity_spawned_signal("player", player.position)
+	
+	print("MASTER: Player spawned at screen center: ", player.position)
+
 func start_game():
 	"""Start the game"""
 	print("Starting game...")
 	game_running = true
+	
 	emit_signal("game_started")
 
 func pause_game():

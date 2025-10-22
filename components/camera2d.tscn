@@ -3,9 +3,19 @@
 [sub_resource type="GDScript" id="Camera2D_script"]
 script/source = "extends Camera2D
 
+var player_target: Node2D
+
 func _ready():
 	enabled = true
 	position = Vector2(0, 0)
+
+func _process(delta):
+	# Follow player if available
+	if player_target:
+		global_position = player_target.global_position
+
+func set_player_target(player: Node2D):
+	player_target = player
 "
 
 [node name="Camera2D" type="Camera2D"]

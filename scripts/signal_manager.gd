@@ -10,6 +10,7 @@ signal entity_spawned_signal(entity_type, position)
 signal entity_destroyed_signal(entity, explosion_radius)
 signal damage_signal(entity, amount, source)
 signal explosion_signal(position, radius, damage)
+signal player_moved_signal(position, direction)
 
 # Game State Signals
 signal game_state_changed(new_state)
@@ -269,6 +270,11 @@ func emit_ui_input_signal(action: String):
 	"""Emit UI input signal"""
 	
 	emit_signal("ui_input_detected", action)
+
+func emit_player_moved_signal(position: Vector2, direction: Vector2):
+	"""Emit player movement signal"""
+	
+	emit_signal("player_moved_signal", position, direction)
 
 func _on_component_loaded(component_name: String):
 	"""Handle component loaded signal from master"""

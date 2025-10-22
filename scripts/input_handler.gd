@@ -128,6 +128,7 @@ func _handle_mouse_button_input(event: InputEventMouseButton):
 	# Handle shooting
 	if event.pressed and button_index == MOUSE_BUTTON_LEFT:
 		ui_input = "shoot"
+		emit_signal("ui_action", "shoot")
 
 func _handle_mouse_motion(event: InputEventMouseMotion):
 	"""Handle mouse motion events"""

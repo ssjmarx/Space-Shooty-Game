@@ -107,18 +107,12 @@ Base Projectile (projectile.gd):
   - _on_body_entered(body) - Handle collision
   - destroy() - Remove projectile
 
-Player Bullet (player_bullet.tscn/gd):
+Bullet (player_bullet.tscn/gd):
 - Node: Area2D (extends Base Projectile)
-- Properties: damage, penetration
+- Properties: explosives
 - Functions:
-  - _ready() - Initialize player bullet
-
-Hunter Bullet (hunter_bullet.tscn/gd):
-- Node: Area2D (extends Base Projectile)
-- Properties: damage, homing_ability
-- Functions:
-  - _ready() - Initialize hunter bullet
-  - _process(delta) - Homing behavior
+  - _ready() - Initialize bullet
+  - _explode() - Explode when destroyed
 
 SIGNAL SYSTEM
 

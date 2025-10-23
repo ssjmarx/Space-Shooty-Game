@@ -47,13 +47,18 @@ func _process(delta):
 		circle_center.y + sin(current_angle) * circle_radius
 	)
 	
+	# Calculate velocity for physics (tangent to circle)
+	var movement_direction = Vector2.RIGHT.rotated(current_angle + PI/2)  # Perpendicular to radius
+	var actual_speed = movement_speed * circle_radius  # Angular speed converted to linear
+	velocity = movement_direction * actual_speed
+	
 	# Update position
 	global_position = new_position
 	
 	# Emit movement signal for debugging
 	var signal_manager = get_signal_manager()
 	if signal_manager:
-		signal_manager.emit_player_moved_signal(global_position, Vector2.RIGHT.rotated(current_angle))
+		signal_manager.emit_player_moved_signal(global_position, movement_direction)
 
 func _draw():
 	"""Draw the debug entity as a red square"""

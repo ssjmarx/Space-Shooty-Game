@@ -29,6 +29,7 @@ func _ready():
 	# Load core components in order
 	load_component("signal_manager")
 	load_component("input_handler")
+	load_component("physics_manager")
 	
 	# Load camera component
 	load_camera_component()
@@ -86,8 +87,8 @@ func load_component(component_name: String) -> Node:
 			component_path = "res://scripts/input_handler.gd"
 			component_script = "res://scripts/input_handler.gd"
 		"physics_manager":
-			component_path = "res://scripts/physics_manager.gd"
-			component_script = "res://scripts/physics_manager.gd"
+			component_path = "res://scripts/physics.gd"
+			component_script = "res://scripts/physics.gd"
 		"sound_manager":
 			component_path = "res://scripts/sound_manager.gd"
 			component_script = "res://scripts/sound_manager.gd"
@@ -393,19 +394,14 @@ func _on_collision_signal(entity_a: Node, entity_b: Node, damage_vector: Vector2
 	
 	print("Collision detected between ", entity_a.name, " and ", entity_b.name)
 	
-	# Apply collision physics
-	if physics_manager:
-		physics_manager.apply_collision_force(entity_a, -damage_vector, damage_vector.length())
-		physics_manager.apply_collision_force(entity_b, damage_vector, damage_vector.length())
+	# Physics manager handles collision damage automatically through signal connections
 
 func _on_entity_destroyed_signal(entity: Node, explosion_radius: float):
 	"""Handle entity destruction"""
 	
 	print("Entity destroyed: ", entity.name, " with explosion radius: ", explosion_radius)
 	
-	# Apply explosion damage
-	if physics_manager and explosion_radius > 0:
-		physics_manager.apply_explosion_damage(entity.global_position, explosion_radius, 100)
+	# Physics manager handles explosion damage automatically through signal connections
 
 func load_debug_component():
 	"""Load debug UI component for testing"""

@@ -25,6 +25,9 @@ func _ready():
 	weight = 0.1  # Very light weight
 	explosives = 100.0  # High explosives for collision damage
 	
+	# Set collision radius for bullets (match visual size)
+	collision_radius = max(bullet_length, bullet_width) * 0.5  # Half the larger dimension
+	
 	# Set default health (bullets are fragile)
 	max_health = 1.0
 	health = max_health
@@ -33,7 +36,7 @@ func _ready():
 	bullet_length = 20.0
 	bullet_width = 8.0
 	
-	print("BULLET: Bullet initialized at position: ", global_position)
+	# print("BULLET: Bullet initialized at position: ", global_position)
 
 func _process(delta):
 	"""Update bullet movement and lifetime"""
@@ -55,7 +58,7 @@ func _draw():
 	"""Draw the bullet as a yellow oval pointing in movement direction"""
 	
 	# Debug: Print the current direction being used for drawing
-	print("DEBUG: Drawing bullet with direction: ", movement_direction, " angle: ", movement_direction.angle())
+	# print("DEBUG: Drawing bullet with direction: ", movement_direction, " angle: ", movement_direction.angle())
 	
 	# Calculate the angle of movement
 	var angle = movement_direction.angle()
@@ -97,12 +100,12 @@ func setup_bullet(spawn_position: Vector2, direction: Vector2, offset_distance: 
 	# Trigger redraw to update rotation
 	queue_redraw()
 	
-	print("BULLET: Setup at ", global_position, " moving ", movement_direction)
+	# print("BULLET: Setup at ", global_position, " moving ", movement_direction)
 
 func despawn_bullet():
 	"""Despawn the bullet"""
 	
-	print("BULLET: Despawning bullet at ", global_position)
+	# print("BULLET: Despawning bullet at ", global_position)
 	
 	# Emit destruction signal
 	var signal_manager = get_signal_manager()
@@ -144,12 +147,12 @@ func set_movement_speed(speed: float):
 func on_collision(other_entity: Node, damage_vector: Vector2):
 	"""Handle bullet collision - bullets despawn on impact"""
 	
-	print("BULLET: Collision with ", other_entity.name, " - despawning")
+	# print("BULLET: Collision with ", other_entity.name, " - despawning")
 	
 	# Emit collision signal for damage application
 	var signal_manager = get_signal_manager()
 	if signal_manager:
-		signal_manager.emit_collision_signal(self, other_entity, damage_vector)
+		signal_manager.emit_collision_signal(self, other_entity)
 	
 	# Despawn bullet on impact
 	despawn_bullet()
@@ -158,7 +161,7 @@ func on_collision(other_entity: Node, damage_vector: Vector2):
 func take_damage(amount: float, source: Node = null):
 	"""Bullets are destroyed by any damage"""
 	
-	print("BULLET: Taking damage - despawning")
+	# print("BULLET: Taking damage - despawning")
 	
 	# Emit destruction signal
 	var signal_manager = get_signal_manager()

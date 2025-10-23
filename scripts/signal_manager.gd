@@ -30,7 +30,7 @@ var visibility_ranges: Dictionary = {}
 
 func _ready():
 	"""Initialize signal manager"""
-	print("Signal Manager initialized")
+	# print("Signal Manager initialized")
 	
 	# Connect to global collision system if available
 	var master = get_parent().get_node_or_null("Master")
@@ -49,7 +49,7 @@ func emit_collision_signal(entity_a: Node, entity_b: Node):
 	# Emit the collision signal
 	emit_signal("collision_signal", entity_a, entity_b, damage_vector)
 	
-	print("Collision signal emitted: ", entity_a.name, " <-> ", entity_b.name)
+	print("SIGNAL MANAGER: Collision signal emitted: ", entity_a.name, " <-> ", entity_b.name)
 
 func emit_visibility_signal(entity: Node, viewer: Node, is_visible: bool):
 	"""Emit visibility signal for entity detection"""
@@ -65,7 +65,7 @@ func emit_entity_spawned_signal(entity_type: String, position: Vector2):
 	"""Emit signal when entity is spawned"""
 	
 	emit_signal("entity_spawned_signal", entity_type, position)
-	print("Entity spawned signal: ", entity_type, " at ", position)
+	# print("Entity spawned signal: ", entity_type, " at ", position)
 
 func emit_entity_destroyed_signal(entity: Node, explosion_radius: float = 0.0):
 	"""Emit signal when entity is destroyed"""
@@ -98,7 +98,7 @@ func register_entity(entity: Node):
 	
 	if entity not in active_entities:
 		active_entities.append(entity)
-		print("Registered entity: ", entity.name)
+		# print("Registered entity: ", entity.name)
 
 func unregister_entity(entity: Node):
 	"""Unregister an entity from the signal manager"""
@@ -281,7 +281,7 @@ func emit_mouse_clicked_signal(screen_position: Vector2, world_position: Vector2
 	"""Emit mouse click signal"""
 	
 	emit_signal("mouse_clicked_signal", screen_position, world_position)
-	print("Mouse clicked signal: screen=", screen_position, " world=", world_position)
+	# print("Mouse clicked signal: screen=", screen_position, " world=", world_position)
 
 func _on_component_loaded(component_name: String):
 	"""Handle component loaded signal from master"""

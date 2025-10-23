@@ -24,7 +24,7 @@ signal component_unloaded(component_name)
 
 func _ready():
 	"""Initialize game systems"""
-	print("Master script initializing...")
+	# print("Master script initializing...")
 	
 	# Load core components in order
 	load_component("signal_manager")
@@ -51,9 +51,9 @@ func _ready():
 	if player_entity and signal_manager:
 		if signal_manager.has_signal("mouse_clicked_signal"):
 			signal_manager.connect("mouse_clicked_signal", player_entity._on_mouse_clicked)
-			print("MASTER: Connected player to mouse click signal")
+			# print("MASTER: Connected player to mouse click signal")
 	
-	print("Master script ready!")
+	# print("Master script ready!")
 
 func _process(delta):
 	"""Main game loop"""
@@ -115,7 +115,7 @@ func load_component(component_name: String) -> Node:
 		"sound_manager":
 			sound_manager = component_node
 	
-	print("Loaded component: ", component_name)
+	# print("Loaded component: ", component_name)
 	emit_signal("component_loaded", component_name)
 	return component_node
 
@@ -177,7 +177,7 @@ func handle_input():
 func spawn_entity(entity_type: String, position: Vector2) -> Node:
 	"""Spawn a game entity at specified position"""
 	
-	print("Spawning entity: ", entity_type, " at ", position)
+	# print("Spawning entity: ", entity_type, " at ", position)
 	
 	# Determine entity scene and script
 	var entity_scene_path = ""
@@ -198,7 +198,7 @@ func spawn_entity(entity_type: String, position: Vector2) -> Node:
 			if signal_manager:
 				signal_manager.register_entity(bullet)
 			
-			print("MASTER: Bullet entity created at ", position)
+			# print("MASTER: Bullet entity created at ", position)
 			return bullet
 		"asteroid":
 			entity_scene_path = "res://scenes/asteroid.tscn"
@@ -249,7 +249,7 @@ func despawn_entity(entity_id: int):
 func spawn_player():
 	"""Spawn the player entity"""
 	
-	print("MASTER: Spawning player...")
+	# print("MASTER: Spawning player...")
 	
 	# Create player entity directly (no scene file needed yet)
 	var player = Node2D.new()
@@ -265,30 +265,30 @@ func spawn_player():
 	var camera = get_node_or_null("Camera2D")
 	if camera and camera.has_method("set_player_target"):
 		camera.set_player_target(player)
-		print("MASTER: Camera set to follow player")
+		# print("MASTER: Camera set to follow player")
 	
 	# Emit spawn signal
 	if signal_manager:
 		signal_manager.emit_entity_spawned_signal("player", player.position)
 	
-	print("MASTER: Player spawned at screen center: ", player.position)
+	# print("MASTER: Player spawned at screen center: ", player.position)
 
 func start_game():
 	"""Start the game"""
-	print("Starting game...")
+	# print("Starting game...")
 	game_running = true
 	
 	emit_signal("game_started")
 
 func pause_game():
 	"""Pause the game"""
-	print("Pausing game...")
+	# print("Pausing game...")
 	game_running = false
 	emit_signal("game_paused")
 
 func stop_game():
 	"""Stop the game"""
-	print("Stopping game...")
+	# print("Stopping game...")
 	game_running = false
 	emit_signal("game_stopped")
 
@@ -335,12 +335,12 @@ func _connect_input_signals():
 	if input_handler.has_signal("ui_action"):
 		input_handler.connect("ui_action", _on_ui_action)
 	
-	print("MASTER: Input signals connected!")
+	# print("MASTER: Input signals connected!")
 
 func _on_movement_input_changed(direction: Vector2):
 	"""Handle movement input changes"""
 	
-	print("MASTER: Movement input changed: ", direction)
+	# print("MASTER: Movement input changed: ", direction)
 	
 	# Broadcast movement input to interested components
 	var ui_node = get_node_or_null("UI")
@@ -352,7 +352,7 @@ func _on_movement_input_changed(direction: Vector2):
 func _on_key_pressed(key_name: String):
 	"""Handle key press events"""
 	
-	print("MASTER: Key pressed: ", key_name)
+	# print("MASTER: Key pressed: ", key_name)
 	
 	# Broadcast key press to interested components
 	var ui_node = get_node_or_null("UI")
@@ -364,7 +364,7 @@ func _on_key_pressed(key_name: String):
 func _on_key_released(key_name: String):
 	"""Handle key release events"""
 	
-	print("MASTER: Key released: ", key_name)
+	# print("MASTER: Key released: ", key_name)
 	
 	# Broadcast key release to interested components
 	var ui_node = get_node_or_null("UI")
@@ -376,7 +376,7 @@ func _on_key_released(key_name: String):
 func _on_ui_action(action: String):
 	"""Handle UI action events"""
 	
-	print("MASTER: UI action: ", action)
+	# print("MASTER: UI action: ", action)
 	
 	# Handle debug test action
 	if action == "debug_test":
@@ -410,37 +410,37 @@ func _on_entity_destroyed_signal(entity: Node, explosion_radius: float):
 func load_debug_component():
 	"""Load debug UI component for testing"""
 	
-	print("MASTER: Loading debug component...")
+	# print("MASTER: Loading debug component...")
 	
 	# Load UI component from scene file
 	var ui_scene = load("res://components/ui.tscn")
 	if ui_scene:
 		var ui_instance = ui_scene.instantiate()
 		add_child(ui_instance)
-		print("MASTER: UI component loaded from scene file")
+		# print("MASTER: UI component loaded from scene file")
 		
 		# Connect debug UI to collision signals
 		var debug_ui = ui_instance.get_node_or_null("DebugUI")
 		if debug_ui and signal_manager:
 			signal_manager.connect("collision_signal", debug_ui.on_collision_signal_received)
-			print("MASTER: Debug UI signals connected")
+			# print("MASTER: Debug UI signals connected")
 	else:
 		print("MASTER: Failed to load UI scene file")
 		return
 	
-	print("MASTER: Debug component loaded successfully!")
+	# print("MASTER: Debug component loaded successfully!")
 
 func load_camera_component():
 	"""Load camera component"""
 	
-	print("MASTER: Loading camera component...")
+	# print("MASTER: Loading camera component...")
 	
 	# Load camera component from scene file
 	var camera_scene = load("res://components/camera2d.tscn")
 	if camera_scene:
 		var camera_instance = camera_scene.instantiate()
 		add_child(camera_instance)
-		print("MASTER: Camera component loaded from scene file")
+		# print("MASTER: Camera component loaded from scene file")
 	else:
 		print("MASTER: Failed to load camera scene file")
 
@@ -486,7 +486,8 @@ func _process_ui_input(ui_input_action: String):
 		"look_ahead":
 			print("Look ahead functionality - to be implemented")
 		"shoot":
-			print("Shoot action - handled in main input processing")
+			# print("Shoot action - handled in main input processing")
+			pass
 		"debug_test":
 			# Handle debug test key
 			var ui_node = get_node_or_null("UI")

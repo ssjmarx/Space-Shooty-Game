@@ -18,7 +18,7 @@ var entity_spawn_count: int = 0
 
 func _ready():
 	"""Initialize debug UI"""
-	print("DEBUG UI: Initializing...")
+	# print("DEBUG UI: Initializing...")
 	
 	# Create UI elements if not set
 	if not keys_label:
@@ -28,7 +28,10 @@ func _ready():
 	if not status_label:
 		status_label = create_label("Status: Ready", Vector2(10, 90))
 	
-	print("DEBUG UI: Ready!")
+	# Spawn debug entity for collision testing
+	spawn_debug_entity()
+	
+	# print("DEBUG UI: Ready!")
 	update_status("DEBUG UI: Ready and connected")
 
 func _process(delta):
@@ -144,6 +147,32 @@ func flash_background():
 	timer.timeout.connect(func(): modulate = original_color; timer.queue_free())
 	add_child(timer)
 	timer.start()
+
+func spawn_debug_entity():
+	"""Spawn debug entity for collision testing"""
+	
+	# print("DEBUG UI: Spawning debug entity for collision testing")
+	
+	# Create debug entity
+	var debug_entity = Node2D.new()
+	debug_entity.name = "DebugEntity"
+	debug_entity.set_script(load("res://scripts/debug_entity.gd"))
+	
+	# Add to scene tree
+	var main_node = get_node_or_null("../..")
+	if main_node:
+		main_node.add_child(debug_entity)
+		spawned_entities.append(debug_entity)
+		
+		# Register with signal manager
+		var signal_manager = main_node.get("signal_manager")
+		if signal_manager:
+			signal_manager.register_entity(debug_entity)
+		
+		update_status("Debug entity spawned for collision testing")
+		# print("DEBUG UI: Debug entity spawned successfully")
+	else:
+		print("DEBUG UI: Could not find main node to add debug entity")
 
 func spawn_basic_entity():
 	"""Spawn a basic entity for testing"""

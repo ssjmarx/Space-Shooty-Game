@@ -51,7 +51,7 @@ var last_escape_time: float = 0.0
 
 func _ready():
 	"""Initialize input handler"""
-	print("Input Handler initialized")
+	# print("Input Handler initialized")
 	
 	# Set process input to true
 	set_process_input(true)
@@ -338,17 +338,17 @@ func _handle_escape_key():
 	if last_key_pressed == "escape" and (current_time - last_escape_time) <= escape_double_press_threshold:
 		# This is the second consecutive escape press
 		escape_press_count += 1
-		print("INPUT: Escape press #", escape_press_count)
+		# print("INPUT: Escape press #", escape_press_count)
 		
 		if escape_press_count >= 2:
 			# Two consecutive escapes - quit game
-			print("INPUT: Double escape pressed - quitting game")
+			# print("INPUT: Double escape pressed - quitting game")
 			get_tree().quit()
 			return
 	else:
 		# Reset count if this is the first escape or too much time passed
 		escape_press_count = 1
-		print("INPUT: First escape press - press escape again to quit")
+		# print("INPUT: First escape press - press escape again to quit")
 	
 	# Update tracking variables
 	last_key_pressed = "escape"

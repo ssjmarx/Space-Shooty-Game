@@ -24,6 +24,9 @@ func _ready():
 	max_health = 100.0
 	health = max_health
 	
+	# Set collision radius for player (match triangle size)
+	collision_radius = triangle_size * 0.5  # Half the triangle height
+	
 	# Create triangle shape
 	create_triangle_shape()
 	
@@ -36,7 +39,7 @@ func _ready():
 		signal_manager.connect("mouse_clicked_signal", _on_mouse_clicked)
 		print("PLAYER: Connected to mouse click signal")
 	
-	print("PLAYER: Player initialized at position: ", global_position)
+	# print("PLAYER: Player initialized at position: ", global_position)
 
 func _process(delta):
 	"""Handle player movement and rotation"""
@@ -189,13 +192,13 @@ func move(direction: Vector2):
 func shoot(direction: Vector2):
 	"""Shoot in given direction (called by master)"""
 	# Placeholder for shooting functionality
-	print("PLAYER: Shooting in direction: ", direction)
+	# print("PLAYER: Shooting in direction: ", direction)
 	# Shooting mechanics will be implemented in later phases
 
 func _on_mouse_clicked(screen_position: Vector2, world_position: Vector2):
 	"""Handle mouse click signal - spawn bullet"""
 	
-	print("PLAYER: Mouse clicked at screen: ", screen_position, " world: ", world_position)
+	# print("PLAYER: Mouse clicked at screen: ", screen_position, " world: ", world_position)
 	
 	# Calculate shooting direction from player to mouse
 	var shooting_direction = (world_position - global_position).normalized()
@@ -207,7 +210,7 @@ func _on_mouse_clicked(screen_position: Vector2, world_position: Vector2):
 func spawn_bullet(direction: Vector2):
 	"""Spawn a bullet in the given direction"""
 	
-	print("PLAYER: Spawning bullet in direction: ", direction)
+	# print("PLAYER: Spawning bullet in direction: ", direction)
 	
 	# Get master script to spawn bullet - try multiple paths
 	var master = get_node_or_null("..")  # Player is direct child of Main
@@ -229,6 +232,6 @@ func spawn_bullet(direction: Vector2):
 		# Setup bullet with direction
 		if bullet and bullet.has_method("setup_bullet"):
 			bullet.setup_bullet(spawn_position, direction, spawn_offset)
-			print("PLAYER: Bullet spawned and setup successfully")
+			# print("PLAYER: Bullet spawned and setup successfully")
 	else:
 		print("PLAYER: Could not find master to spawn bullet - tried .., ../.., /root/Main, and current scene")

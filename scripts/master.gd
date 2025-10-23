@@ -34,9 +34,6 @@ func _ready():
 	load_component("input_handler")
 	load_component("physics_manager")
 	
-	# Load space board
-	load_space_board()
-	
 	# Load camera component
 	load_camera_component()
 	

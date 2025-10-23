@@ -26,10 +26,16 @@ func _ready():
 	"""Initialize game systems"""
 	# print("Master script initializing...")
 	
+	# Load screen manager first (required by other components)
+	load_component("screen_manager")
+	
 	# Load core components in order
 	load_component("signal_manager")
 	load_component("input_handler")
 	load_component("physics_manager")
+	
+	# Load space board
+	load_space_board()
 	
 	# Load camera component
 	load_camera_component()
@@ -80,6 +86,9 @@ func load_component(component_name: String) -> Node:
 	var component_script = ""
 	
 	match component_name:
+		"screen_manager":
+			component_path = "res://scripts/screen_manager.gd"
+			component_script = "res://scripts/screen_manager.gd"
 		"signal_manager":
 			component_path = "res://scripts/signal_manager.gd"
 			component_script = "res://scripts/signal_manager.gd"
@@ -256,7 +265,7 @@ func spawn_player():
 	var player = Node2D.new()
 	player.name = "Player"
 	player.set_script(load("res://scripts/player.gd"))
-	player.position = Vector2(512, 384)  # Center of 1024x768 screen
+	player.position = Vector2(0, 0)  # Origin point (0,0)
 	
 	# Add to scene tree
 	add_child(player)
@@ -272,7 +281,7 @@ func spawn_player():
 	if signal_manager:
 		signal_manager.emit_entity_spawned_signal("player", player.position)
 	
-	# print("MASTER: Player spawned at screen center: ", player.position)
+	# print("MASTER: Player spawned at origin: ", player.position)
 
 func start_game():
 	"""Start the game"""
@@ -425,6 +434,22 @@ func load_debug_component():
 		return
 	
 	# print("MASTER: Debug component loaded successfully!")
+
+func load_space_board():
+	"""Load space board component"""
+	
+	print("MASTER: Loading space board...")
+	
+	# Create space board directly from script
+	var space_board = Node2D.new()
+	space_board.name = "SpaceBoard"
+	space_board.set_script(load("res://scripts/space_board.gd"))
+	
+	# Add to scene tree
+	add_child(space_board)
+	current_board = space_board
+	
+	print("MASTER: Space board loaded successfully!")
 
 func load_camera_component():
 	"""Load camera component"""

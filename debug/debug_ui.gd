@@ -7,6 +7,7 @@ extends Control
 @onready var keys_label: Label
 @onready var signals_label: Label
 @onready var status_label: Label
+@onready var coordinates_label: Label
 
 # Debug state
 var current_movement_input: Vector2 = Vector2.ZERO
@@ -27,6 +28,8 @@ func _ready():
 		signals_label = create_label("Signals: None", Vector2(10, 50))
 	if not status_label:
 		status_label = create_label("Status: Ready", Vector2(10, 90))
+	if not coordinates_label:
+		coordinates_label = create_label("Player Position: (0, 0)", Vector2(10, 130))
 	
 	# Spawn debug entity for collision testing
 	spawn_debug_entity()
@@ -227,6 +230,12 @@ func on_debug_key_pressed():
 	else:
 		# 5 or more entities - unload all
 		unload_all_entities()
+
+func update_player_coordinates(position: Vector2):
+	"""Update the player coordinates display"""
+	
+	if coordinates_label:
+		coordinates_label.text = "Player Position: (" + str(int(position.x)) + ", " + str(int(position.y)) + ")"
 
 func cleanup():
 	"""Clean up debug UI before unloading"""

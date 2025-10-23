@@ -10,6 +10,7 @@ var weight: float = 1.0
 var explosives: float = 0.0  # Explosive damage potential, default 0
 var entity_type: String = "basic_entity"
 var is_alive: bool = true
+var velocity: Vector2 = Vector2.ZERO  # Current velocity for physics calculations
 
 # Collision detection
 var collision_area: Area2D
@@ -166,6 +167,26 @@ func get_health_percentage() -> float:
 func is_at_full_health() -> bool:
 	"""Check if entity is at full health"""
 	return health >= max_health
+
+# Velocity functions for physics
+func get_velocity() -> Vector2:
+	"""Get current velocity"""
+	return velocity
+
+func set_velocity(new_velocity: Vector2):
+	"""Set current velocity"""
+	velocity = new_velocity
+
+func get_speed() -> float:
+	"""Get current speed (magnitude of velocity)"""
+	return velocity.length()
+
+func get_direction() -> Vector2:
+	"""Get current movement direction"""
+	if velocity.length() > 0:
+		return velocity.normalized()
+	else:
+		return Vector2.UP  # Default direction
 
 # Collision detection functions
 func setup_collision_detection():

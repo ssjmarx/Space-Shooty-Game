@@ -52,6 +52,9 @@ func _process(delta):
 		# Update position
 		global_position += movement_input * movement_speed * delta
 		
+		# Update velocity for physics calculations
+		velocity = movement_input * movement_speed
+		
 		# Update facing direction
 		current_direction = movement_input.normalized()
 		
@@ -62,6 +65,9 @@ func _process(delta):
 		var signal_manager = get_signal_manager()
 		if signal_manager:
 			signal_manager.emit_player_moved_signal(global_position, current_direction)
+	else:
+		# No input, set velocity to zero
+		velocity = Vector2.ZERO
 
 func _draw():
 	"""Draw the player triangle"""

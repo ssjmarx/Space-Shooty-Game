@@ -44,6 +44,9 @@ func _process(delta):
 	# Move bullet in set direction
 	global_position += movement_direction * movement_speed * delta
 	
+	# Update velocity for physics calculations
+	velocity = movement_direction * movement_speed
+	
 	# Update lifetime
 	lifetime -= delta
 	if lifetime <= 0:

@@ -129,6 +129,11 @@ func _handle_mouse_button_input(event: InputEventMouseButton):
 	if event.pressed and button_index == MOUSE_BUTTON_LEFT:
 		ui_input = "shoot"
 		emit_signal("ui_action", "shoot")
+		
+		# Emit mouse click signal through signal manager
+		var signal_manager = get_signal_manager()
+		if signal_manager and signal_manager.has_method("emit_mouse_clicked_signal"):
+			signal_manager.emit_mouse_clicked_signal(mouse_position, mouse_world_position)
 
 func _handle_mouse_motion(event: InputEventMouseMotion):
 	"""Handle mouse motion events"""
@@ -309,6 +314,20 @@ func get_pressed_keys() -> Array:
 		if key_states[key]:
 			pressed_keys.append(key)
 	return pressed_keys
+
+func get_signal_manager() -> Node:
+	"""Get reference to signal manager"""
+	
+	# Try multiple paths to find signal manager
+	var handler = get_node_or_null("../signal_manager")
+	if not handler:
+		handler = get_node_or_null("../../signal_manager")
+	if not handler:
+		var main_node = get_node_or_null("../..")
+		if main_node:
+			handler = main_node.get("signal_manager")
+	
+	return handler
 
 func _handle_escape_key():
 	"""Handle escape key with double-press functionality"""

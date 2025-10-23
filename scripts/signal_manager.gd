@@ -22,6 +22,7 @@ signal wave_completed(wave_number)
 signal movement_input_detected(direction)
 signal shooting_input_detected(direction)
 signal ui_input_detected(action)
+signal mouse_clicked_signal(position, world_position)
 
 # Entity tracking
 var active_entities: Array = []
@@ -275,6 +276,12 @@ func emit_player_moved_signal(position: Vector2, direction: Vector2):
 	"""Emit player movement signal"""
 	
 	emit_signal("player_moved_signal", position, direction)
+
+func emit_mouse_clicked_signal(screen_position: Vector2, world_position: Vector2):
+	"""Emit mouse click signal"""
+	
+	emit_signal("mouse_clicked_signal", screen_position, world_position)
+	print("Mouse clicked signal: screen=", screen_position, " world=", world_position)
 
 func _on_component_loaded(component_name: String):
 	"""Handle component loaded signal from master"""

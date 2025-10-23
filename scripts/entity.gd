@@ -7,6 +7,7 @@ extends Node2D
 var health: float = 100.0
 var max_health: float = 100.0
 var weight: float = 1.0
+var explosives: float = 0.0  # Explosive damage potential, default 0
 var entity_type: String = "basic_entity"
 var is_alive: bool = true
 

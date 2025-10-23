@@ -47,6 +47,12 @@ func _ready():
 	if input_handler:
 		_connect_input_signals()
 	
+	# Connect player to mouse click signals after all components are loaded
+	if player_entity and signal_manager:
+		if signal_manager.has_signal("mouse_clicked_signal"):
+			signal_manager.connect("mouse_clicked_signal", player_entity._on_mouse_clicked)
+			print("MASTER: Connected player to mouse click signal")
+	
 	print("Master script ready!")
 
 func _process(delta):
@@ -180,6 +186,20 @@ func spawn_entity(entity_type: String, position: Vector2) -> Node:
 	match entity_type:
 		"player":
 			entity_scene_path = "res://scenes/player.tscn"
+		"bullet":
+			# Create bullet entity directly from script
+			var bullet = Node2D.new()
+			bullet.name = "Bullet"
+			bullet.set_script(load("res://scripts/bullet.gd"))
+			bullet.global_position = position
+			add_child(bullet)
+			
+			# Register bullet with signal manager
+			if signal_manager:
+				signal_manager.register_entity(bullet)
+			
+			print("MASTER: Bullet entity created at ", position)
+			return bullet
 		"asteroid":
 			entity_scene_path = "res://scenes/asteroid.tscn"
 		"hunter":

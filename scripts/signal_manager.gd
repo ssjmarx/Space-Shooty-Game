@@ -6,11 +6,13 @@ extends Node
 # Universal Signals
 signal collision_signal(entity_a, entity_b, damage_vector)
 signal visibility_signal(entity, viewer, is_visible)
-signal entity_spawned_signal(entity_type, position)
+signal entity_spawned_signal(entity_type, entity, position)
 signal entity_destroyed_signal(entity, explosion_radius)
 signal damage_signal(entity, amount, source)
 signal explosion_signal(position, radius, damage)
-signal player_moved_signal(position, direction)
+signal player_moved_signal(entity, position, direction)
+signal entity_wrapped_signal(entity: Node, old_position: Vector2, new_position: Vector2)
+signal universal_teleport_signal(teleport_distance: Vector2, teleport_direction: Vector2)
 
 # Game State Signals
 signal game_state_changed(new_state)
@@ -61,10 +63,10 @@ func emit_visibility_signal(entity: Node, viewer: Node, is_visible: bool):
 	else:
 		print("Visibility: ", entity.name, " lost by ", viewer.name)
 
-func emit_entity_spawned_signal(entity_type: String, position: Vector2):
+func emit_entity_spawned_signal(entity_type: String, entity: Node, position: Vector2):
 	"""Emit signal when entity is spawned"""
 	
-	emit_signal("entity_spawned_signal", entity_type, position)
+	emit_signal("entity_spawned_signal", entity_type, entity, position)
 	# print("Entity spawned signal: ", entity_type, " at ", position)
 
 func emit_entity_destroyed_signal(entity: Node, explosion_radius: float = 0.0):
@@ -92,6 +94,13 @@ func emit_explosion_signal(position: Vector2, radius: float, damage: float):
 	
 	emit_signal("explosion_signal", position, radius, damage)
 	print("Explosion signal at ", position, " radius: ", radius, " damage: ", damage)
+
+func emit_universal_teleport_signal(teleport_distance: Vector2, teleport_direction: Vector2):
+	"""Emit universal teleport signal for all entities when player wraps"""
+	
+	print("SIGNAL MANAGER: Emitting universal teleport signal - distance: ", teleport_distance, " direction: ", teleport_direction)
+	emit_signal("universal_teleport_signal", teleport_distance, teleport_direction)
+	print("SIGNAL MANAGER: Universal teleport signal emitted successfully")
 
 func register_entity(entity: Node):
 	"""Register an entity with the signal manager"""
@@ -272,10 +281,16 @@ func emit_ui_input_signal(action: String):
 	
 	emit_signal("ui_input_detected", action)
 
-func emit_player_moved_signal(position: Vector2, direction: Vector2):
+func emit_player_moved_signal(entity: Node, position: Vector2, direction: Vector2):
 	"""Emit player movement signal"""
 	
-	emit_signal("player_moved_signal", position, direction)
+	emit_signal("player_moved_signal", entity, position, direction)
+
+func emit_entity_wrapped_signal(entity: Node, old_position: Vector2, new_position: Vector2):
+	"""Emit entity wrap-around signal"""
+	
+	emit_signal("entity_wrapped_signal", entity, old_position, new_position)
+	print("Entity wrapped signal: ", entity.name, " from ", old_position, " to ", new_position)
 
 func emit_mouse_clicked_signal(screen_position: Vector2, world_position: Vector2):
 	"""Emit mouse click signal"""

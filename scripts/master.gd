@@ -37,6 +37,9 @@ func _ready():
 	# Load camera component
 	load_camera_component()
 	
+	# Load space board
+	load_space_board()
+	
 	# Load debug component for testing
 	load_debug_component()
 	
@@ -240,7 +243,7 @@ func spawn_entity(entity_type: String, position: Vector2) -> Node:
 	
 	# Emit spawn signal
 	if signal_manager:
-		signal_manager.emit_signal("entity_spawned_signal", entity_type, position)
+		signal_manager.emit_entity_spawned_signal(entity_type, entity_instance, position)
 	
 	return entity_instance
 
@@ -276,7 +279,7 @@ func spawn_player():
 	
 	# Emit spawn signal
 	if signal_manager:
-		signal_manager.emit_entity_spawned_signal("player", player.position)
+		signal_manager.emit_entity_spawned_signal("player", player, player.position)
 	
 	# print("MASTER: Player spawned at origin: ", player.position)
 

@@ -84,6 +84,10 @@ Module: Signal Management
     - emit_visibility_signal() - Entity visibility detection
     - emit_entity_spawned_signal() / emit_entity_destroyed_signal() - Entity lifecycle
     - emit_damage_signal() / emit_explosion_signal() - Damage events
+    - emit_player_moved_signal() - Player movement tracking
+    - emit_mouse_clicked_signal() - Mouse input handling
+    - emit_entity_wrapped_signal() - Entity wrap-around events
+    - emit_universal_teleport_signal() - Universal teleport for all entities
     - register_entity() / unregister_entity() - Entity tracking
     - set_visibility_range() / get_visibility_range() - Visibility management
     - check_visibility() - Distance-based visibility checking
@@ -106,6 +110,115 @@ Module: Input Handling
     - reset_input() - Clear all input states
     - set_custom_movement_keys() / set_custom_action_keys() - Key customization
 
+Module: Physics Management
+----------------------------------------
+- scripts/physics.gd
+  Purpose: Collision damage calculations and physics processing
+  Classes: Physics (Node)
+  Functions:
+    - _ready() - Initialize physics system and connect signals
+    - _on_collision_signal_received() - Handle collision events
+    - get_entity_velocity() / get_entity_speed() / get_entity_direction() - Entity physics queries
+    - get_entity_weight() - Entity mass properties
+    - apply_damage_to_entity() - Apply calculated damage
+    - calculate_collision_damage_vector() - Physics-based damage calculations
+    - set_gravity() / set_friction() / get_gravity() / get_friction() - Physics properties
+
+Module: Screen Management
+----------------------------------------
+- scripts/screen_manager.gd
+  Purpose: Dynamic screen sizing and viewport scaling
+  Classes: ScreenManager (Node)
+  Functions:
+    - _ready() - Initialize screen system and calculate dimensions
+    - calculate_screen_dimensions() - Calculate optimal 4:3 resolution
+    - setup_window_and_viewport() - Configure borderless fullscreen
+    - get_default_resolution() / get_viewport_size() / get_monitor_size() - Screen queries
+    - get_scale_factor() / get_viewport_offset() - Scaling information
+    - scale_position() / unscale_position() - Coordinate conversion
+    - scale_vector() / unscale_vector() / scale_float() / unscale_float() - Value conversion
+    - get_screen_bounds() / get_viewport_bounds() - Boundary queries
+    - is_position_in_viewport() / center_position_on_screen() - Position utilities
+
+===============================================================================
+ENTITY SYSTEM
+===============================================================================
+
+Module: Base Entity
+----------------------------------------
+- scripts/entity.gd
+  Purpose: Foundation class for all game entities
+  Classes: Entity (Node2D)
+  Properties: health, max_health, weight, explosives, entity_type, velocity, collision_radius
+  Functions:
+    - _ready() / _exit_tree() - Entity lifecycle
+    - take_damage() / heal() - Health management
+    - destroy() - Entity destruction
+    - register_with_signal_manager() / unregister_from_signal_manager() - Signal integration
+    - connect_to_signal() / disconnect_from_signal() / disconnect_all_signals() - Signal management
+    - get_entity_type() / set_entity_type() - Entity identification
+    - get_weight() / set_weight() - Mass properties
+    - get_health_percentage() / is_at_full_health() - Health queries
+    - get_velocity() / set_velocity() / get_speed() / get_direction() - Movement properties
+    - setup_collision_detection() - Collision system initialization
+    - _on_area_entered() / _on_body_entered() / handle_collision_with_entity() - Collision handling
+    - is_collision_enabled() - Collision state query
+    - on_collision() / on_visibility_changed() / on_game_state_changed() - Overrideable events
+
+Module: Player Entity
+----------------------------------------
+- scripts/player.gd
+  Purpose: Player-controlled entity with movement and shooting
+  Classes: Player (extends Entity)
+  Properties: movement_speed, current_direction, triangle_size, input_handler
+  Functions:
+    - _ready() - Initialize player entity and systems
+    - _process(delta) - Handle movement and rotation
+    - _draw() - Draw green triangle with black outline
+    - create_triangle_shape() - Generate triangle geometry
+    - update_triangle_rotation() - Rotate triangle to face movement direction
+    - get_movement_input() - Get movement from input handler
+    - get_input_handler() - Find input handler reference
+    - take_damage() / on_collision() - Player-specific damage handling
+    - get_movement_speed() / set_movement_speed() - Movement properties
+    - get_facing_direction() / set_facing_direction() - Direction control
+    - move() / shoot() - Action methods (for compatibility)
+    - _on_mouse_clicked() - Handle mouse clicks for shooting
+    - spawn_bullet() - Create projectile entities
+    - _on_universal_teleport() - Handle universal teleport signal
+
+Module: Bullet Entity
+----------------------------------------
+- scripts/bullet.gd
+  Purpose: Projectile entities with movement and collision
+  Classes: Bullet (extends Entity)
+  Properties: movement_direction, movement_speed, spawn_offset, lifetime, play_area_bounds
+  Functions:
+    - _ready() - Initialize bullet properties
+    - _process(delta) - Update movement and lifetime
+    - _draw() - Draw yellow oval pointing in movement direction
+    - setup_bullet() - Configure bullet position and direction
+    - despawn_bullet() - Remove bullet from game
+    - set_play_area() - Configure despawn boundaries
+    - get_movement_direction() / set_movement_direction() - Direction control
+    - get_movement_speed() / set_movement_speed() - Speed control
+    - on_collision() / take_damage() - Bullet-specific collision (despawns on impact)
+    - _on_universal_teleport() - Handle universal teleport signal
+
+Module: Debug Entity
+----------------------------------------
+- scripts/debug_entity.gd
+  Purpose: Red square that moves in circles for collision testing
+  Classes: DebugEntity (extends Entity)
+  Properties: circle_center, circle_radius, movement_speed, current_angle, square_size
+  Functions:
+    - _ready() - Initialize debug entity
+    - _process(delta) - Move in circular pattern
+    - _draw() - Draw red square with black outline
+    - setup_debug_entity() - Configure movement parameters
+    - on_collision() / take_damage() - Debug collision handling with visual feedback
+    - _on_universal_teleport() - Handle universal teleport signal
+
 ===============================================================================
 SCENE SYSTEM
 ===============================================================================
@@ -114,24 +227,178 @@ Module: Main Scene
 ----------------------------------------
 - scenes/main.tscn
   Purpose: Primary game scene with master controller
-  Contains: Main Node2D with master.gd script, Camera2D, CanvasLayer for UI
+  Contains: Main Node2D with master.gd script attachment
   Structure:
     - Main (Node2D) - Master script attachment point
-    - Camera2D - Game camera system
-    - UI/CanvasLayer - User interface container
-    - UI/DebugLabel - Development information display
+
+Module: Space Board
+----------------------------------------
+- scripts/space_board.gd
+  Purpose: Large game area with black background and coordinate system
+  Classes: SpaceBoard (Node2D)
+  Properties: board_size, default_screen_size, camera, screen_manager
+  Functions:
+    - _ready() - Initialize board, camera, and connections
+    - setup_background() - Create black background
+    - setup_starfield() - Create starfield system
+    - setup_tiled_backgrounds() - Create black backgrounds for tiled areas
+    - setup_wrap_around() - Create wrap-around system
+    - setup_camera() - Configure camera system
+    - connect_to_player_signals() - Connect to player movement
+    - _on_player_moved() - Handle player position updates
+    - update_coordinate_display() - Update debug UI coordinates
+    - get_debug_ui() - Find debug UI reference
+    - get_board_size() / get_screen_size() - Size queries
+    - is_position_in_bounds() / clamp_position_to_bounds() - Boundary checking
+    - get_board_center() - Center position query
+    - _draw() / draw_debug_grid() - Optional debug visualization
+
+===============================================================================
+COMPONENT SYSTEM
+===============================================================================
+
+Module: Camera Component
+----------------------------------------
+- components/camera2d.tscn
+  Purpose: Camera2D component with player following
+  Classes: Camera2D (extends Camera2D)
+  Properties: player_target
+  Functions:
+    - _ready() - Initialize camera
+    - _process(delta) - Follow player target
+    - set_player_target() - Set player to follow
+
+Module: UI Component
+----------------------------------------
+- components/ui.tscn
+  Purpose: CanvasLayer with debug UI integration
+  Structure:
+    - UI (CanvasLayer) - UI container
+    - UI/DebugUI (Control) - Debug UI attachment point
+
+===============================================================================
+VISUAL SYSTEMS
+===============================================================================
+
+Module: Starfield Generator
+----------------------------------------
+- scripts/starfield.gd
+  Purpose: Efficient starfield with multiple colors, shapes, and twinkle effects
+  Classes: Starfield (Node2D)
+  Properties: stars, star_count, board_size, viewport_rect, visible_stars, is_main_starfield, grid_offset
+  Functions:
+    - _ready() - Initialize starfield and generate stars
+    - generate_stars() - Create procedural star distribution
+    - create_star() - Generate individual star with properties
+    - get_weighted_star_type() - Weighted random star type selection
+    - get_random_star_shape() - Random star shape selection
+    - _process(delta) - Minimal updates for static starfield
+    - _draw() - Draw all stars (no culling)
+    - draw_star() - Draw individual star based on type with grid offset
+    - draw_cross() / draw_diamond() / draw_star_shape() - Shape drawing methods
+    - setup_tiled_copy() - Configure starfield as tiled copy with offset
+    - create_tiled_copies() - Create 3x3 grid of starfield copies
+    - get_star_count() / get_visible_star_count() - Star count queries
+    - set_star_density() - Adjust star density
+    - regenerate_starfield() - Regenerate entire starfield
+
+Module: Wrap-Around System
+----------------------------------------
+- scripts/wrap_around.gd
+  Purpose: Creates illusion of infinite flight by wrapping entities around board edges
+  Classes: WrapAround (Node)
+  Properties: board_size, half_board, wrap_margin, wrapped_entities
+  Functions:
+    - _ready() - Initialize wrap-around system and connect signals
+    - connect_to_signals() - Connect to entity movement signals
+    - _on_entity_moved() - Handle entity movement for wrapping
+    - _on_entity_spawned() - Register entities for wrapping
+    - _on_entity_destroyed() - Unregister entities
+    - check_wrap_around() - Calculate wrapped position
+    - perform_wrap_around() - Execute entity position wrap and emit universal teleport
+    - wrap_position() - Public position wrapping function
+    - is_near_edge() / get_wrap_direction() - Edge detection utilities
+    - get_opposite_position() - Calculate opposite board position
+    - update_board_size() - Update board dimensions
+    - get_wrapped_entity_count() / clear_wrapped_entities() - Entity management
+    - _process(delta) - Fallback continuous wrap checking
+
+===============================================================================
+DEBUG SYSTEM
+===============================================================================
+
+Module: Debug UI
+----------------------------------------
+- debug/debug_ui.gd
+  Purpose: Testing interface for development and collision testing
+  Classes: DebugUI (extends Control)
+  Properties: keys_label, signals_label, status_label, coordinates_label
+  Functions:
+    - _ready() - Initialize UI elements and spawn test entity
+    - _process(delta) - Update debug displays
+    - create_label() - Create debug label elements
+    - on_movement_input_changed() - Handle movement input signals
+    - on_key_pressed() / on_key_released() - Handle key input signals
+    - update_display() / update_keys_display() / update_signals_display() - UI updates
+    - update_status() - Update status message
+    - on_collision_signal_received() - Handle collision events with flash effect
+    - flash_background() - Visual feedback for collisions
+    - spawn_debug_entity() - Create test entity
+    - spawn_basic_entity() - Create additional test entities
+    - unload_all_entities() - Clean up test entities
+    - on_debug_key_pressed() - Cycle through debug functions
+    - update_player_coordinates() - Update player position display
+    - cleanup() / _exit_tree() - Clean up resources
 
 ===============================================================================
 SUMMARY
 ===============================================================================
-Total Files: 11
-Total Modules: 7
-Project Status: Phase 1 Step 1 Complete - Core systems implemented
+Total Files: 21
+Total Modules: 14
+Project Status: Phase 2 Step 4 Complete - Starfield and wrap-around systems
 Components Implemented:
 - Master script with dynamic component loading
 - Signal management system with universal signals
 - Input handling system with comprehensive controls
+- Physics management with collision damage calculations
+- Screen management with dynamic scaling
+- Base entity system with collision detection
+- Player entity with movement and shooting
+- Bullet entity system with projectile physics
+- Debug entity for collision testing
+- Space board with coordinate system
+- Starfield generator with multiple colors, shapes, and twinkle effects
+- Wrap-around system for infinite flight illusion
+- Camera component with player following
+- UI component with debug interface
+- Debug UI with collision testing and entity spawning
 - Basic scene structure with main scene
 - Project configuration and documentation
 
-Last Updated: Phase 1 Step 1 Implementation
+Implemented Features:
+- Component-based architecture with master controller
+- Signal-based communication system
+- Entity spawning and management
+- Collision detection and damage calculation
+- Player movement with WASD/arrow keys
+- Mouse-based shooting system
+- Dynamic screen scaling and viewport management
+- Debug UI with real-time information display
+- Entity lifecycle management
+- Physics-based collision damage
+- Coordinate tracking and display
+- Efficient starfield with 500 procedurally generated stars (optimized for performance)
+- Multiple star colors (white, yellow, blue, red) and sizes
+- Various star shapes (circles, crosses, diamonds, 4-pointed stars)
+- Realistic twinkle effects with individual phase offsets
+- Performance-optimized viewport culling for star rendering
+- Tiled starfield system with 3x3 grid for seamless edge transitions
+- Continuous star coverage during wrap-around transitions
+- Infinite flight illusion through seamless edge wrapping
+- Universal teleport system for all entities when player wraps
+- Wrap-around system for all entities (player, bullets, etc.)
+- Smooth position transitions across board boundaries
+- Edge detection and opposite position calculation
+- Visual continuity maintained during wrap-around events
+
+Last Updated: Phase 2 Step 4 Implementation - Universal Teleport System

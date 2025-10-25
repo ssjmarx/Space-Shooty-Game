@@ -29,6 +29,12 @@ func _ready():
 	# Set up the board background
 	setup_background()
 	
+	# Setup starfield system
+	setup_starfield()
+	
+	# Setup wrap-around system
+	setup_wrap_around()
+	
 	# Find and setup camera
 	setup_camera()
 	
@@ -47,6 +53,54 @@ func setup_background():
 	add_child(background)
 	
 	print("SPACE BOARD: Black background created at size: ", board_size, " centered at: ", background.position)
+	print("SPACE BOARD: Background covers area from ", background.position, " to ", background.position + board_size)
+
+func setup_starfield():
+	"""Setup the starfield system"""
+	
+	# Create black backgrounds for all tiled areas FIRST (so they're behind stars)
+	setup_tiled_backgrounds()
+	
+	var starfield = Node2D.new()
+	starfield.name = "Starfield"
+	starfield.set_script(load("res://scripts/starfield.gd"))
+	add_child(starfield)
+	
+	# Create tiled copies for seamless edge transitions
+	starfield.create_tiled_copies(self)
+	
+	print("SPACE BOARD: Starfield system created with tiled copies")
+
+func setup_tiled_backgrounds():
+	"""Create black backgrounds for all tiled areas"""
+	
+	# Create a 3x3 grid of black backgrounds around the main one
+	var background_positions = [
+		Vector2(-1, -1), Vector2(0, -1), Vector2(1, -1),
+		Vector2(-1, 0),                     Vector2(1, 0),
+		Vector2(-1, 1),  Vector2(0, 1),  Vector2(1, 1)
+	]
+	
+	for offset in background_positions:
+		var background = ColorRect.new()
+		background.name = "TiledBackground_" + str(offset.x) + "_" + str(offset.y)
+		background.size = board_size
+		background.color = Color.BLACK
+		background.position = (offset * board_size) - (board_size / 2.0)  # Center on origin
+		add_child(background)
+		
+		print("SPACE BOARD: Created tiled background at offset: ", offset, " position: ", background.position)
+		print("SPACE BOARD: Background covers area from ", background.position, " to ", background.position + board_size)
+
+func setup_wrap_around():
+	"""Setup the wrap-around system"""
+	
+	var wrap_around = Node.new()
+	wrap_around.name = "WrapAround"
+	wrap_around.set_script(load("res://scripts/wrap_around.gd"))
+	add_child(wrap_around)
+	
+	print("SPACE BOARD: Wrap-around system created")
 
 func setup_camera():
 	"""Setup camera to follow player within board bounds"""
@@ -78,7 +132,7 @@ func connect_to_player_signals():
 	else:
 		print("SPACE BOARD: Could not connect to player movement signals")
 
-func _on_player_moved(position: Vector2, direction: Vector2):
+func _on_player_moved(entity: Node, position: Vector2, direction: Vector2):
 	"""Handle player movement - update coordinate display"""
 	
 	# Update coordinate display in debug UI

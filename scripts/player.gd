@@ -4,7 +4,7 @@ extends "res://scripts/entity.gd"
 # Green triangle with black fill, movement with WASD/arrow keys, faces movement direction
 
 # Player-specific properties
-var movement_speed: float = 200.0  # pixels per second
+var movement_speed: float = 2000.0  # pixels per second
 var current_direction: Vector2 = Vector2.UP  # Default facing up
 var input_handler: Node
 
@@ -25,7 +25,7 @@ func _ready():
 	health = max_health
 	
 	# Set collision radius for player (match triangle size)
-	collision_radius = triangle_size * 0.5  # Half the triangle height
+	collision_radius = triangle_size * 0.5  # Half of triangle height
 	
 	# Create triangle shape
 	create_triangle_shape()
@@ -38,6 +38,11 @@ func _ready():
 	if signal_manager and signal_manager.has_signal("mouse_clicked_signal"):
 		signal_manager.connect("mouse_clicked_signal", _on_mouse_clicked)
 		print("PLAYER: Connected to mouse click signal")
+	
+	# Connect to universal teleport signal
+	if signal_manager and signal_manager.has_signal("universal_teleport_signal"):
+		signal_manager.connect("universal_teleport_signal", _on_universal_teleport)
+		print("PLAYER: Connected to universal teleport signal")
 	
 	# print("PLAYER: Player initialized at position: ", global_position)
 
@@ -64,13 +69,13 @@ func _process(delta):
 		# Emit movement signal for debugging
 		var signal_manager = get_signal_manager()
 		if signal_manager:
-			signal_manager.emit_player_moved_signal(global_position, current_direction)
+			signal_manager.emit_player_moved_signal(self, global_position, current_direction)
 	else:
 		# No input, set velocity to zero
 		velocity = Vector2.ZERO
 
 func _draw():
-	"""Draw the player triangle"""
+	"""Draw player triangle"""
 	
 	# Draw black fill
 	draw_colored_polygon(triangle_points, Color.BLACK)
@@ -82,14 +87,14 @@ func _draw():
 		draw_line(start_point, end_point, Color.GREEN, 2.0)
 
 func create_triangle_shape():
-	"""Create the triangle shape points"""
+	"""Create triangle shape points"""
 	
 	triangle_points.clear()
 	base_triangle_points.clear()
 	
-	# Create triangle pointing up with base half the size of height
+	# Create triangle pointing up with base half's size of height
 	var top_point = Vector2(0, -triangle_size)
-	var base_width = triangle_size * 0.5  # Base is half the height
+	var base_width = triangle_size * 0.5  # Base is half of height
 	var left_point = Vector2(-base_width, triangle_size * 0.5)
 	var right_point = Vector2(base_width, triangle_size * 0.5)
 	
@@ -114,7 +119,7 @@ func update_triangle_rotation():
 	var rotation_matrix = Transform2D()
 	rotation_matrix = rotation_matrix.rotated(angle)
 	
-	# Apply rotation to base triangle points (not the already rotated ones)
+	# Apply rotation to base triangle points (not already rotated ones)
 	var rotated_points = PackedVector2Array()
 	for point in base_triangle_points:
 		rotated_points.append(rotation_matrix * point)
@@ -212,6 +217,18 @@ func _on_mouse_clicked(screen_position: Vector2, world_position: Vector2):
 	if shooting_direction != Vector2.ZERO:
 		# Spawn bullet through master
 		spawn_bullet(shooting_direction)
+
+func _on_universal_teleport(teleport_distance: Vector2, teleport_direction: Vector2):
+	"""Handle universal teleport signal - move all entities when player wraps"""
+	
+	print("PLAYER: Received universal teleport signal - distance: ", teleport_distance, " direction: ", teleport_direction)
+	print("PLAYER: Position before teleport: ", global_position)
+	
+	# Player is already wrapped by wrap-around system, so don't apply universal teleport
+	# This prevents double-movement (wrap + teleport)
+	print("PLAYER: Skipping universal teleport - player already wrapped by wrap-around system")
+	
+	print("PLAYER: Position after teleport: ", global_position, " (unchanged)")
 
 func spawn_bullet(direction: Vector2):
 	"""Spawn a bullet in the given direction"""

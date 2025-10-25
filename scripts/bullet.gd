@@ -26,7 +26,7 @@ func _ready():
 	explosives = 100.0  # High explosives for collision damage
 	
 	# Set collision radius for bullets (match visual size)
-	collision_radius = max(bullet_length, bullet_width) * 0.5  # Half the larger dimension
+	collision_radius = max(bullet_length, bullet_width) * 0.5  # Half of larger dimension
 	
 	# Set default health (bullets are fragile)
 	max_health = 1.0
@@ -35,6 +35,12 @@ func _ready():
 	# Visual properties
 	bullet_length = 20.0
 	bullet_width = 8.0
+	
+	# Connect to universal teleport signal
+	var signal_manager = get_signal_manager()
+	if signal_manager and signal_manager.has_signal("universal_teleport_signal"):
+		signal_manager.connect("universal_teleport_signal", _on_universal_teleport)
+		print("BULLET: Connected to universal teleport signal")
 	
 	# print("BULLET: Bullet initialized at position: ", global_position)
 
@@ -58,12 +64,12 @@ func _process(delta):
 		despawn_bullet()
 
 func _draw():
-	"""Draw the bullet as a yellow oval pointing in movement direction"""
+	"""Draw bullet as a yellow oval pointing in movement direction"""
 	
-	# Debug: Print the current direction being used for drawing
+	# Debug: Print current direction being used for drawing
 	# print("DEBUG: Drawing bullet with direction: ", movement_direction, " angle: ", movement_direction.angle())
 	
-	# Calculate the angle of movement
+	# Calculate angle of movement
 	var angle = movement_direction.angle()
 	
 	# Create oval points directly without Transform2D scaling
@@ -79,7 +85,7 @@ func _draw():
 		var x = cos(angle_step) * half_length
 		var y = sin(angle_step) * half_width
 		
-		# Rotate the point to align with movement direction
+		# Rotate point to align with movement direction
 		var rotated_x = x * cos(angle) - y * sin(angle)
 		var rotated_y = x * sin(angle) + y * cos(angle)
 		
@@ -87,6 +93,17 @@ func _draw():
 	
 	# Draw yellow oval
 	draw_colored_polygon(points, Color.YELLOW)
+
+func _on_universal_teleport(teleport_distance: Vector2, teleport_direction: Vector2):
+	"""Handle universal teleport signal - move all entities when player wraps"""
+	
+	print("BULLET: Received universal teleport signal - distance: ", teleport_distance, " direction: ", teleport_direction)
+	print("BULLET: Position before teleport: ", global_position)
+	
+	# Apply teleport to bullet
+	global_position += teleport_distance
+	
+	print("BULLET: Position after teleport: ", global_position)
 
 func setup_bullet(spawn_position: Vector2, direction: Vector2, offset_distance: float = 40.0):
 	"""Setup bullet with position and direction"""
@@ -106,7 +123,7 @@ func setup_bullet(spawn_position: Vector2, direction: Vector2, offset_distance: 
 	# print("BULLET: Setup at ", global_position, " moving ", movement_direction)
 
 func despawn_bullet():
-	"""Despawn the bullet"""
+	"""Despawn bullet"""
 	
 	# print("BULLET: Despawning bullet at ", global_position)
 	
@@ -119,7 +136,7 @@ func despawn_bullet():
 	queue_free()
 
 func set_play_area(bounds: Rect2):
-	"""Set the play area bounds for despawn checking"""
+	"""Set play area bounds for despawn checking"""
 	
 	play_area_bounds = bounds
 

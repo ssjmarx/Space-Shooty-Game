@@ -4,10 +4,9 @@ extends "res://scripts/entity.gd"
 # Red square that moves in a slow circle for collision testing
 
 # Movement properties
-var circle_center: Vector2 = Vector2(512, 384)  # Center of play area
-var circle_radius: float = 200.0  # Radius of circular movement
-var movement_speed: float = 1.0  # Radians per second
-var current_angle: float = 0.0  # Current angle in circular path
+var movement_direction: Vector2 = Vector2.RIGHT  # Simple rightward movement
+var movement_speed: float = 50.0  # Pixels per second (slow and obvious)
+var start_position: Vector2  # Starting position for reference
 
 # Visual properties
 var square_size: float = 40.0  # Size of the red square
@@ -24,33 +23,31 @@ func _ready():
 	explosives = 10.0  # Low explosives
 	
 	# Set collision radius to match visual size
-	collision_radius = square_size * 0.5  # Half the square size
+	collision_radius = square_size * 0.5  # Half of square size
 	
 	# Set health
 	max_health = 50.0
 	health = max_health
 	
-	# Set initial position at circle start
-	global_position = circle_center + Vector2(circle_radius, 0)
+	# Set initial position
+	start_position = global_position
+	
+	# Connect to universal teleport signal
+	var signal_manager = get_signal_manager()
+	if signal_manager and signal_manager.has_signal("universal_teleport_signal"):
+		signal_manager.connect("universal_teleport_signal", _on_universal_teleport)
+		print("DEBUG ENTITY: Connected to universal teleport signal")
 	
 	print("DEBUG ENTITY: Debug entity initialized at position: ", global_position)
 
 func _process(delta):
-	"""Move debug entity in a circle"""
+	"""Move debug entity in a straight line"""
 	
-	# Update angle
-	current_angle += movement_speed * delta
+	# Calculate new position
+	var new_position = global_position + (movement_direction * movement_speed * delta)
 	
-	# Calculate new position on circle
-	var new_position = Vector2(
-		circle_center.x + cos(current_angle) * circle_radius,
-		circle_center.y + sin(current_angle) * circle_radius
-	)
-	
-	# Calculate velocity for physics (tangent to circle)
-	var movement_direction = Vector2.RIGHT.rotated(current_angle + PI/2)  # Perpendicular to radius
-	var actual_speed = movement_speed * circle_radius  # Angular speed converted to linear
-	velocity = movement_direction * actual_speed
+	# Update velocity for physics
+	velocity = movement_direction * movement_speed
 	
 	# Update position
 	global_position = new_position
@@ -58,7 +55,7 @@ func _process(delta):
 	# Emit movement signal for debugging
 	var signal_manager = get_signal_manager()
 	if signal_manager:
-		signal_manager.emit_player_moved_signal(global_position, movement_direction)
+		signal_manager.emit_player_moved_signal(self, global_position, movement_direction)
 
 func _draw():
 	"""Draw the debug entity as a red square"""
@@ -83,15 +80,26 @@ func _draw():
 func setup_debug_entity(center: Vector2, radius: float, speed: float):
 	"""Setup debug entity with custom parameters"""
 	
-	circle_center = center
-	circle_radius = radius
+	# For simple linear movement, just set speed and position
 	movement_speed = speed
+	global_position = center
+	start_position = center
 	
-	# Reset to starting position
-	current_angle = 0.0
-	global_position = circle_center + Vector2(circle_radius, 0)
+	print("DEBUG ENTITY: Setup with position ", center, " speed ", speed)
+
+func _on_universal_teleport(teleport_distance: Vector2, teleport_direction: Vector2):
+	"""Handle universal teleport signal - move all entities when player wraps"""
 	
-	print("DEBUG ENTITY: Setup with center ", center, " radius ", radius, " speed ", speed)
+	print("DEBUG ENTITY: Received universal teleport signal - distance: ", teleport_distance, " direction: ", teleport_direction)
+	print("DEBUG ENTITY: Position before teleport: ", global_position)
+	
+	# Apply teleport to debug entity
+	global_position += teleport_distance
+	
+	# Also update start position to maintain relative position
+	start_position += teleport_distance
+	
+	print("DEBUG ENTITY: Position after teleport: ", global_position)
 
 # Override collision behavior for debug entity
 func on_collision(other_entity: Node, damage_vector: Vector2):

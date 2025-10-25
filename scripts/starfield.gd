@@ -6,7 +6,7 @@ extends Node2D
 
 # Star properties
 var stars: Array = []
-var star_count: int = 500  # Reduced number of stars for performance
+var star_count: int = 150  # Reduced to 150
 var board_size: Vector2 = Vector2(8000, 6000)  # Will be updated from space board
 var is_main_starfield: bool = true  # Whether this is the main starfield or a tiled copy
 var grid_offset: Vector2 = Vector2.ZERO  # Offset for tiled copies
@@ -14,34 +14,16 @@ var main_starfield: Node2D  # Reference to main starfield for shared data
 
 # Star types and properties
 enum StarType {
-	SMALL_WHITE,
-	MEDIUM_WHITE,
-	LARGE_WHITE,
-	SMALL_YELLOW,
-	MEDIUM_YELLOW,
-	LARGE_YELLOW,
-	SMALL_BLUE,
-	MEDIUM_BLUE,
-	LARGE_BLUE,
-	SMALL_RED,
-	MEDIUM_RED,
-	LARGE_RED
+	SMALL,
+	MEDIUM,
+	LARGE
 }
 
-# Star configuration
+# Star configuration with randomized colors - smaller circles, larger stars
 var star_config = {
-	StarType.SMALL_WHITE: {"size": 1.0, "color": Color.WHITE, "twinkle_speed": 3.0, "twinkle_range": 0.3},
-	StarType.MEDIUM_WHITE: {"size": 2.0, "color": Color.WHITE, "twinkle_speed": 2.5, "twinkle_range": 0.4},
-	StarType.LARGE_WHITE: {"size": 3.0, "color": Color.WHITE, "twinkle_speed": 2.0, "twinkle_range": 0.5},
-	StarType.SMALL_YELLOW: {"size": 1.0, "color": Color.YELLOW, "twinkle_speed": 3.5, "twinkle_range": 0.4},
-	StarType.MEDIUM_YELLOW: {"size": 2.0, "color": Color.YELLOW, "twinkle_speed": 3.0, "twinkle_range": 0.5},
-	StarType.LARGE_YELLOW: {"size": 3.0, "color": Color.YELLOW, "twinkle_speed": 2.5, "twinkle_range": 0.6},
-	StarType.SMALL_BLUE: {"size": 1.0, "color": Color.CYAN, "twinkle_speed": 4.0, "twinkle_range": 0.3},
-	StarType.MEDIUM_BLUE: {"size": 2.0, "color": Color.CYAN, "twinkle_speed": 3.5, "twinkle_range": 0.4},
-	StarType.LARGE_BLUE: {"size": 3.0, "color": Color.CYAN, "twinkle_speed": 3.0, "twinkle_range": 0.5},
-	StarType.SMALL_RED: {"size": 1.0, "color": Color.RED, "twinkle_speed": 2.5, "twinkle_range": 0.2},
-	StarType.MEDIUM_RED: {"size": 2.0, "color": Color.RED, "twinkle_speed": 2.0, "twinkle_range": 0.3},
-	StarType.LARGE_RED: {"size": 3.0, "color": Color.RED, "twinkle_speed": 1.5, "twinkle_range": 0.4}
+	StarType.SMALL: {"size": 1.5},  # Half of previous 3.0
+	StarType.MEDIUM: {"size": 2.5},  # Half of previous 5.0
+	StarType.LARGE: {"size": 3.5}   # Half of previous 7.0
 }
 
 # Static starfield - no viewport culling for simplicity
@@ -78,7 +60,7 @@ func generate_stars():
 func create_star(half_board: Vector2) -> Dictionary:
 	"""Create a single star with random properties"""
 	
-	# Random position across the board
+	# Random position across board
 	var position = Vector2(
 		randf_range(-half_board.x, half_board.x),
 		randf_range(-half_board.y, half_board.y)
@@ -88,42 +70,45 @@ func create_star(half_board: Vector2) -> Dictionary:
 	var star_type = get_weighted_star_type()
 	var config = star_config[star_type]
 	
+	# Generate random star color
+	var random_color = generate_random_star_color()
+	
 	# Create star data
 	var star = {
 		"position": position,
 		"type": star_type,
 		"size": config.size,
-		"base_color": config.color,
-		"twinkle_speed": config.twinkle_speed,
-		"twinkle_range": config.twinkle_range,
-		"twinkle_offset": randf() * TAU,  # Random phase offset
-		"twinkle_time": 0.0,
-		"current_brightness": 1.0,
+		"base_color": random_color,
 		"shape": get_random_star_shape(),
-		"rotation": randf() * TAU,
-		"rotation_speed": randf_range(-1.0, 1.0)
+		"rotation": randf() * TAU  # Static random rotation only
 	}
 	
 	return star
+
+func generate_random_star_color() -> Color:
+	"""Generate star color with restricted palette: 75% white, rest split between red, orange, light blue"""
+	
+	# Weighted distribution: 75% white, 8.33% each for red, orange, light blue
+	var random_value = randf()
+	
+	if random_value < 0.75:
+		# 75% white
+		return Color.WHITE.darkened(randf() * 0.3)
+	elif random_value < 0.833:
+		# 8.33% red
+		return Color.RED.lightened(randf() * 0.3)
+	elif random_value < 0.917:
+		# 8.33% orange
+		return Color.ORANGE.lightened(randf() * 0.1)
+	else:
+		# 8.33% light blue
+		return Color.CYAN.lightened(randf() * 0.4)
 
 func get_weighted_star_type() -> StarType:
 	"""Get a weighted random star type"""
 	
 	# Weight distribution: more small stars, fewer large stars
-	var weights = [
-		30,  # SMALL_WHITE
-		15,  # MEDIUM_WHITE
-		5,   # LARGE_WHITE
-		20,  # SMALL_YELLOW
-		10,  # MEDIUM_YELLOW
-		3,   # LARGE_YELLOW
-		15,  # SMALL_BLUE
-		8,   # MEDIUM_BLUE
-		2,   # LARGE_BLUE
-		10,  # SMALL_RED
-		5,   # MEDIUM_RED
-	 1    # LARGE_RED
-	]
+	var weights = [70, 25, 5]  # SMALL, MEDIUM, LARGE
 	
 	var total_weight = 0
 	for weight in weights:
@@ -137,13 +122,13 @@ func get_weighted_star_type() -> StarType:
 		if random_value <= current_weight:
 			return i as StarType
 	
-	return StarType.SMALL_WHITE  # Fallback
+	return StarType.SMALL  # Fallback
 
 func get_random_star_shape() -> String:
-	"""Get a random star shape"""
+	"""Get a random star shape - 75% circles"""
 	
-	var shapes = ["circle", "cross", "diamond", "star"]
-	var weights = [50, 25, 15, 10]  # Weighted distribution
+	var shapes = ["circle", "star4", "star6"]  # Circle, 4-point star, 6-point star
+	var weights = [75, 12.5, 12.5]  # 75% circles, rest split evenly
 	
 	var total_weight = 0
 	for weight in weights:
@@ -159,16 +144,7 @@ func get_random_star_shape() -> String:
 	
 	return "circle"  # Fallback
 
-func _process(delta):
-	"""Static starfield - no updates needed"""
-	
-	# Only main starfield handles updates
-	if not is_main_starfield:
-		return
-	
-	# Static starfield - no animation, just queue redraw occasionally
-	if randf() < 0.01:  # Redraw 1% of the time for any changes
-		queue_redraw()
+# No animation - static vector starfield
 
 # Viewport culling removed - static starfield draws all stars
 
@@ -220,13 +196,15 @@ func create_tiled_copies(parent_node: Node):
 		print("STARFIELD: Created tiled copy at offset: ", copy.grid_offset)
 
 func draw_star(star: Dictionary):
-	"""Draw a single star"""
+	"""Draw a single star with vector graphics (colored outline, black fill)"""
 	
-	var color = star.base_color
-	color.a *= star.current_brightness  # Apply twinkle brightness
+	var outline_color = star.base_color
 	
 	# Apply grid offset for tiled copies
 	var draw_position = star.position + grid_offset
+	
+	# Use base size
+	var current_size = star.size
 	
 	# Debug: Print first few star positions for each starfield
 	if Engine.get_frames_drawn() < 5 and star == stars[0]:
@@ -234,13 +212,51 @@ func draw_star(star: Dictionary):
 	
 	match star.shape:
 		"circle":
-			draw_circle(draw_position, star.size, color)
-		"cross":
-			draw_cross(draw_position, star.size, color)
-		"diamond":
-			draw_diamond(draw_position, star.size, color)
-		"star":
-			draw_star_shape(draw_position, star.size, color, star.rotation)
+			draw_vector_circle(draw_position, current_size, outline_color)
+		"star4":
+			draw_vector_4_point_star(draw_position, current_size, outline_color, star.rotation)
+		"star6":
+			draw_vector_6_point_star(draw_position, current_size, outline_color, star.rotation)
+
+func draw_vector_circle(position: Vector2, size: float, outline_color: Color):
+	"""Draw a circle with colored outline and black fill (vector style)"""
+	
+	# Draw black fill
+	draw_circle(position, size, Color.BLACK)
+	
+	# Draw colored outline
+	draw_circle(position, size, outline_color, false, 1.0)
+
+func draw_vector_4_point_star(position: Vector2, size: float, outline_color: Color, rotation: float):
+	"""Draw a 4-pointed star made of 2 full line segments (vector style)"""
+	
+	var outer_radius = size * 3.0  # Made 3x larger for visibility
+	
+	# Draw 2 full lines extending through center (cross pattern)
+	var angle1 = rotation
+	var angle2 = rotation + PI/2  # 90 degrees
+	
+	# Calculate points extending in both directions from center
+	var point1a = position + Vector2(cos(angle1) * outer_radius, sin(angle1) * outer_radius)
+	var point1b = position - Vector2(cos(angle1) * outer_radius, sin(angle1) * outer_radius)
+	var point2a = position + Vector2(cos(angle2) * outer_radius, sin(angle2) * outer_radius)
+	var point2b = position - Vector2(cos(angle2) * outer_radius, sin(angle2) * outer_radius)
+	
+	# Draw the 2 full line segments extending through center
+	draw_line(point1a, point1b, outline_color, 1.0)
+	draw_line(point2a, point2b, outline_color, 1.0)
+
+func draw_vector_6_point_star(position: Vector2, size: float, outline_color: Color, rotation: float):
+	"""Draw a 6-pointed star made of 3 full line segments (vector style)"""
+	
+	var outer_radius = size * 3.0  # Made 3x larger for visibility
+	
+	# Draw 3 full lines extending through center (60 degrees apart)
+	for i in range(3):
+		var angle = (PI * 2.0 * i / 3.0) + rotation  # 120 degrees apart for 3 lines
+		var point_a = position + Vector2(cos(angle) * outer_radius, sin(angle) * outer_radius)
+		var point_b = position - Vector2(cos(angle) * outer_radius, sin(angle) * outer_radius)
+		draw_line(point_a, point_b, outline_color, 1.0)
 
 func draw_cross(position: Vector2, size: float, color: Color):
 	"""Draw a cross-shaped star"""
@@ -259,7 +275,7 @@ func draw_diamond(position: Vector2, size: float, color: Color):
 	points.append(position + Vector2(-size, 0))
 	draw_colored_polygon(points, color)
 
-func draw_star_shape(position: Vector2, size: float, color: Color, rotation: float):
+func draw_4_point_star(position: Vector2, size: float, color: Color, rotation: float):
 	"""Draw a 4-pointed star shape"""
 	
 	var points = PackedVector2Array()
@@ -274,6 +290,26 @@ func draw_star_shape(position: Vector2, size: float, color: Color, rotation: flo
 		points.append(point)
 	
 	draw_colored_polygon(points, color)
+
+func draw_6_point_star(position: Vector2, size: float, color: Color, rotation: float):
+	"""Draw a 6-pointed star shape"""
+	
+	var points = PackedVector2Array()
+	var inner_radius = size * 0.4
+	var outer_radius = size
+	
+	# Create 12 points (6 outer, 6 inner) for 6-pointed star
+	for i in range(12):
+		var angle = (PI * 2.0 * i / 12.0) + rotation
+		var radius = inner_radius if i % 2 == 1 else outer_radius
+		var point = position + Vector2(cos(angle) * radius, sin(angle) * radius)
+		points.append(point)
+	
+	draw_colored_polygon(points, color)
+
+func draw_star_shape(position: Vector2, size: float, color: Color, rotation: float):
+	"""Draw a 4-pointed star shape (legacy function)"""
+	draw_4_point_star(position, size, color, rotation)
 
 func get_star_count() -> int:
 	"""Get the total number of stars"""

@@ -179,10 +179,17 @@ func _update_mouse_positions():
 	if viewport:
 		mouse_position = viewport.get_mouse_position()
 		
-		# Convert to world position (will need camera reference)
+		# Convert to world position using proper camera transformation
 		var camera = viewport.get_camera_2d()
 		if camera:
-			mouse_world_position = camera.global_position + (mouse_position - viewport.get_visible_rect().size / 2)
+			# Get viewport center for proper world coordinate calculation
+			var viewport_center = viewport.get_visible_rect().size / 2
+			# Calculate world position relative to camera
+			mouse_world_position = camera.global_position + (mouse_position - viewport_center)
+			
+			# Debug output
+			if Input.is_mouse_button_pressed(MOUSE_BUTTON_LEFT):
+				print("INPUT: Mouse pos: ", mouse_position, " world pos: ", mouse_world_position, " camera pos: ", camera.global_position)
 
 func is_key_pressed(key_name: String) -> bool:
 	"""Check if a key is currently pressed"""

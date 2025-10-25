@@ -8,7 +8,7 @@ var movement_direction: Vector2 = Vector2.UP
 var movement_speed: float = 1500.0  # pixels per second (tripled from 500)
 var spawn_offset: float = 20.0  # Distance from player when spawned (halved from 40)
 var lifetime: float = 3.0  # Seconds before auto-despawn
-var play_area_bounds: Rect2 = Rect2(-1000, -1000, 2000, 2000)  # Default play area
+var play_area_bounds: Rect2 = Rect2(-4000, -3000, 8000, 6000)  # Match space board size
 
 # Visual properties
 var bullet_length: float = 20.0

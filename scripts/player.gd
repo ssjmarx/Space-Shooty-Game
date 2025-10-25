@@ -209,14 +209,18 @@ func shoot(direction: Vector2):
 func _on_mouse_clicked(screen_position: Vector2, world_position: Vector2):
 	"""Handle mouse click signal - spawn bullet"""
 	
-	# print("PLAYER: Mouse clicked at screen: ", screen_position, " world: ", world_position)
+	print("PLAYER: Mouse clicked at screen: ", screen_position, " world: ", world_position)
+	print("PLAYER: Player position: ", global_position)
 	
 	# Calculate shooting direction from player to mouse
 	var shooting_direction = (world_position - global_position).normalized()
+	print("PLAYER: Shooting direction: ", shooting_direction)
 	
 	if shooting_direction != Vector2.ZERO:
 		# Spawn bullet through master
 		spawn_bullet(shooting_direction)
+	else:
+		print("PLAYER: Shooting direction is ZERO - not spawning bullet")
 
 func _on_universal_teleport(teleport_distance: Vector2, teleport_direction: Vector2):
 	"""Handle universal teleport signal - move all entities when player wraps"""
